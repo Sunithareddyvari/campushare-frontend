@@ -1,8 +1,7 @@
 div img{
-  border-radius:100%;
-  width:100px;
-  height:100px;
   padding-left:0px;
+  border-radius: 100px;
+  
 }.navbar{
   padding:5px 40px;
   display:flex;
@@ -15,24 +14,44 @@ div img{
   display:flex;
   align-items:center;
   margin-left:0;
+  
 }
 .nav-links{
   word-spacing: 25px;
   position:absolute;
-  left:700px;
+  left:950px;
   top:35px;
   cursor: pointer;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+  font-weight: 500;
+  
+}
+.nav-links a {
+  text-decoration: none;
+  color:blueviolet;
+  font-weight: 500;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s, color 0.2s;
+}
+.nav-links a:hover {
+  color: blueviolet;
+  border-bottom: 2px solid blueviolet;
 }
 .logo{
   height:100px;
-  width:120px;
+  width:100px;
   margin-left:0px;
   position:absolute;
-  left:10px;
+  left:5px;
   top:1px;
+  
 }
 .wesite_name{
-  font-size:30px;
+  font-size:34px;
   margin:0;
   padding-right:0px;
   position:absolute;
@@ -42,31 +61,52 @@ div img{
 }
 .text{
   position:absolute;
-  top:200px;
-  right:100px;
+  top:130px;
+  right:80px;
   left:80px;
   text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.hero-buttons{
+  display:flex;
+  flex-direction:row;
+  gap:20px;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:30px;
 }
 div p{
   color:blueviolet;
-  margin-bottom:40px;
+  margin-bottom:10px;
+  font-size:18px;
+  margin-bottom:0;
 }
 div h1{
-font-size:60px;
+font-size:68px;
+margin-top:0;
 }
 span{
-  color:blueviolet
+  color:blueviolet;
+  margin-bottom:0px;
 }
 div h5{
-  font-size:20px;
+  font-size:22px;
   padding-left:130px;
   color:rgb(187, 163, 163);
   padding-right:100px;
+  margin-top:0;
 }
 nav button{
   width:100px;
   margin-left:0;
-
+}
+.nav-links a:has(button) {
+  border-bottom: none !important;
+}
+.nav-links a:has(button):hover {
+  border-bottom: none !important;
 }
 .highlightbtn{
   background-color: blueviolet;
@@ -94,35 +134,30 @@ nav button{
 }
 .search-container {
   position: relative;
-  width: 300px;
-  margin-top: 40px;
-  }
+  width: 600px;
+  margin: 0 auto;
+}
 
 .search-container input {
   width: 100%;
-  padding: 10px 40px 10px 15px; /* space for icon */
+  padding: 14px 50px 14px 20px;
   font-size: 16px;
   border: 2px solid #ccc;
   border-radius: 25px;
   outline: none;
-  position: relative;
-  top:530px;
-  left:200px;
-  width:840px;
-  
+  box-sizing: border-box;
 }
 
 .search-container input:focus {
-  border-color: #007bff;
+  border-color: blueviolet;
 }
 .search-container i {
   position: absolute;
-  top: 552px;
-  right:0px;
-  left:1000px;
+  top: 50%;
+  right: 18px;
   transform: translateY(-50%);
   color: gray;
-  pointer-events: none; /* makes icon non-clickable */
+  pointer-events: none;
 }
 
 .filter-bar {
@@ -133,7 +168,7 @@ nav button{
   padding: 15px 10px;
   border-radius: 12px;
   position:absolute;
-  top:730px;
+  top:620px;
   width:95%;
   margin-left:0px;
 }
@@ -441,5 +476,3 @@ select {
 .bottom-courses-section {
     padding: 700px 40px 20px 40px; /* reduce bottom padding */
 }
-
-

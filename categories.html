@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories — CampuShare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+  <style>
+    body { background: #f4f6f9; }
+    .navbar { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+
+    /* ── Page ── */
+    .categories-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .page-header { margin-bottom: 32px; }
+    .breadcrumb { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+    .breadcrumb a { color: #aaa; text-decoration: none; }
+    .breadcrumb a:hover { color: blueviolet; }
+    .page-title { font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+    .page-sub { font-size: 15px; color: #888; }
+
+    /* ── Subject selector grid ── */
+    .subject-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+    .subject-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 14px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .subject-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: 14px;
+    }
+    .subject-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .subject-card.active { border-color: blueviolet; box-shadow: 0 4px 20px rgba(138,43,226,0.2); }
+    .subject-emoji { font-size: 36px; margin-bottom: 10px; display: block; }
+    .subject-name { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .subject-count { font-size: 12px; color: #aaa; }
+    .subject-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px;
+      background: #ede9fe; color: blueviolet;
+    }
+
+    /* ── Roadmap section ── */
+    .roadmap-section {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+    .roadmap-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .roadmap-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+    .roadmap-emoji { font-size: 42px; }
+    .roadmap-title { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+    .roadmap-desc { font-size: 14px; color: #888; margin-top: 2px; }
+
+    /* progress bar */
+    .roadmap-progress-wrap {
+      background: #f0f0f0;
+      border-radius: 20px;
+      height: 8px;
+      margin: 16px 0 32px;
+      overflow: hidden;
+    }
+    .roadmap-progress-bar {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, blueviolet, #a855f7);
+      transition: width 0.6s ease;
+    }
+    .progress-label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Timeline roadmap ── */
+    .roadmap-timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+    .roadmap-timeline::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, blueviolet, #e5e7eb);
+      border-radius: 3px;
+    }
+
+    .roadmap-phase { margin-bottom: 10px; }
+
+    .phase-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #aaa;
+      margin-bottom: 10px;
+      padding-left: 8px;
+    }
+
+    .roadmap-node {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .roadmap-node:hover { box-shadow: 0 4px 18px rgba(91,75,219,0.12); border-color: #e0d9ff; }
+    .roadmap-node.completed { border-color: #bbf7d0; background: #f0fdf4; }
+    .roadmap-node.in-progress { border-color: #fde68a; background: #fffbeb; }
+    .roadmap-node.locked { opacity: 0.55; cursor: not-allowed; }
+
+    /* dot on timeline */
+    .roadmap-node::before {
+      content: '';
+      position: absolute;
+      left: -33px;
+      top: 22px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #ccc;
+      background: #fff;
+      transition: all 0.2s;
+    }
+    .roadmap-node.completed::before { background: #22c55e; box-shadow: 0 0 0 2px #22c55e; }
+    .roadmap-node.in-progress::before { background: #f59e0b; box-shadow: 0 0 0 2px #f59e0b; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 2px #f59e0b;} 50%{box-shadow:0 0 0 5px rgba(245,158,11,0.3);} }
+
+    .node-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .node-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .node-status {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      flex-shrink: 0; margin-left: 10px;
+    }
+    .status-done { background: #dcfce7; color: #16a34a; }
+    .status-wip  { background: #fef3c7; color: #d97706; }
+    .status-todo { background: #f3f4f6; color: #888; }
+    .status-lock { background: #f3f4f6; color: #bbb; }
+
+    .node-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 12px; }
+
+    .node-resources {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .res-chip {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600;
+      padding: 5px 12px; border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .res-chip:hover { opacity: 0.8; }
+    .chip-pdf  { background: #fee2e2; color: #ef4444; }
+    .chip-video { background: #dbeafe; color: #3b82f6; }
+    .chip-notes { background: #ede9fe; color: blueviolet; }
+
+    .node-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .node-footer span { display: flex; align-items: center; gap: 5px; }
+    .mark-btn {
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mark-done { background: #dcfce7; color: #16a34a; }
+    .mark-done:hover { background: #bbf7d0; }
+    .mark-start { background: #ede9fe; color: blueviolet; }
+    .mark-start:hover { background: #ddd6fe; }
+
+    /* expandable topics */
+    .node-topics {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .node-topics.open { display: block; }
+    .topic-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #555;
+      padding: 5px 0;
+    }
+    .topic-item input[type=checkbox] { accent-color: blueviolet; width: 15px; height: 15px; cursor: pointer; }
+    .expand-btn {
+      background: none; border: none;
+      font-size: 12px; color: blueviolet;
+      cursor: pointer; font-weight: 600;
+      padding: 0; margin-top: 4px;
+    }
+    .expand-btn:hover { text-decoration: underline; }
+
+    /* placeholder when no subject selected */
+    .pick-hint {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+    }
+    .pick-hint .hint-emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+    .pick-hint p { font-size: 17px; }
+
+    @media (max-width: 768px) {
+      .subject-grid { grid-template-columns: repeat(3, 1fr); }
+      .roadmap-timeline { padding-left: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="logo.png" alt="logo" class="logo">
+      <h1 class="wesite_name">CampuShare</h1>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="community.html">Community</a>
+      <a href="upload.html">Upload</a>
+      <a href="signin.html">SignIn</a>
+    </nav>
+  </header>
+
+  <div class="categories-page">
+
+    <div class="page-header">
+      <div class="breadcrumb"><a href="index.html">Home</a> / Categories</div>
+      <h1 class="page-title">Learning Paths</h1>
+      <p class="page-sub">Pick a subject below and follow a step-by-step roadmap to master it — from basics to advanced.</p>
+    </div>
+
+    <!-- Subject selector -->
+    <div class="subject-grid">
+      <div class="subject-card" onclick="showRoadmap('cse')">
+        <span class="subject-badge">Popular</span>
+        <span class="subject-emoji">💻</span>
+        <div class="subject-name">Computer Science</div>
+        <div class="subject-count">240 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('math')">
+        <span class="subject-emoji">📐</span>
+        <div class="subject-name">Mathematics</div>
+        <div class="subject-count">180 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('physics')">
+        <span class="subject-emoji">⚛️</span>
+        <div class="subject-name">Physics</div>
+        <div class="subject-count">160 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('webdev')">
+        <span class="subject-badge">Trending</span>
+        <span class="subject-emoji">🌐</span>
+        <div class="subject-name">Web Development</div>
+        <div class="subject-count">310 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('ai')">
+        <span class="subject-badge">Hot 🔥</span>
+        <span class="subject-emoji">🤖</span>
+        <div class="subject-name">AI / ML</div>
+        <div class="subject-count">195 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('chemistry')">
+        <span class="subject-emoji">🧪</span>
+        <div class="subject-name">Chemistry</div>
+        <div class="subject-count">120 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('biology')">
+        <span class="subject-emoji">🧬</span>
+        <div class="subject-name">Biology</div>
+        <div class="subject-count">145 resources</div>
+      </div>
+      <div class="subject-card" onclick="showRoadmap('ece')">
+        <span class="subject-emoji">⚡</span>
+        <div class="subject-name">Electronics</div>
+        <div class="subject-count">98 resources</div>
+      </div>
+    </div>
+
+    <!-- Hint before selecting -->
+    <div class="pick-hint" id="pick-hint">
+      <span class="hint-emoji">👆</span>
+      <p>Select a subject above to view its learning roadmap</p>
+    </div>
+
+    <!-- ══ CSE ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-cse">
+      <div class="roadmap-header">
+        <span class="roadmap-emoji">💻</span>
+        <div>
+          <div class="roadmap-title">Computer Science Roadmap</div>
+          <div class="roadmap-desc">From programming basics to data structures, algorithms, OS, DBMS and beyond.</div>
+        </div>
+      </div>
+      <div class="progress-label"><span>Your progress</span><span id="cse-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="cse-bar" style="width:0%"></div></div>
+
+      <div class="roadmap-timeline">
+
+        <div class="roadmap-phase">
+          <div class="phase-label">🟢 Phase 1 — Foundations</div>
+
+          <div class="roadmap-node completed" id="node-cse-1">
+            <div class="node-top">
+              <div class="node-title">Programming Fundamentals</div>
+              <span class="node-status status-done">✓ Done</span>
+            </div>
+            <div class="node-desc">Variables, loops, functions, arrays and basic problem solving in C or Python.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> C Programming Notes</a>
+              <a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Python Crash Course</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-clock"></i> ~3 weeks</span>
+              <button class="mark-btn mark-done" onclick="toggleDone('cse-1', this)">✓ Completed</button>
+            </div>
+            <button class="expand-btn" onclick="toggleTopics('cse-1-topics', this)">▾ Show topics</button>
+            <div class="node-topics" id="cse-1-topics">
+              <div class="topic-item"><input type="checkbox" checked> Variables & Data Types</div>
+              <div class="topic-item"><input type="checkbox" checked> Loops & Conditionals</div>
+              <div class="topic-item"><input type="checkbox" checked> Functions & Recursion</div>
+              <div class="topic-item"><input type="checkbox" checked> Arrays & Strings</div>
+              <div class="topic-item"><input type="checkbox"> Pointers & Memory</div>
+            </div>
+          </div>
+
+          <div class="roadmap-node in-progress" id="node-cse-2">
+            <div class="node-top">
+              <div class="node-title">Data Structures</div>
+              <span class="node-status status-wip">In Progress</span>
+            </div>
+            <div class="node-desc">Linked lists, stacks, queues, trees, graphs and hash maps — the backbone of CS.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> DS Complete Notes</a>
+              <a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Tree Visualizer</a>
+              <a href="#" class="res-chip chip-notes"><i class="fa-solid fa-file-lines"></i> Cheat Sheet</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-clock"></i> ~4 weeks</span>
+              <button class="mark-btn mark-start" onclick="toggleDone('cse-2', this)">Mark Done</button>
+            </div>
+            <button class="expand-btn" onclick="toggleTopics('cse-2-topics', this)">▾ Show topics</button>
+            <div class="node-topics" id="cse-2-topics">
+              <div class="topic-item"><input type="checkbox" checked> Linked Lists</div>
+              <div class="topic-item"><input type="checkbox" checked> Stacks & Queues</div>
+              <div class="topic-item"><input type="checkbox"> Binary Trees & BST</div>
+              <div class="topic-item"><input type="checkbox"> Graphs (BFS/DFS)</div>
+              <div class="topic-item"><input type="checkbox"> Hash Maps</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">🔵 Phase 2 — Core Subjects</div>
+
+          <div class="roadmap-node" id="node-cse-3">
+            <div class="node-top">
+              <div class="node-title">Algorithms & Complexity</div>
+              <span class="node-status status-todo">To Do</span>
+            </div>
+            <div class="node-desc">Sorting, searching, dynamic programming, greedy algorithms and Big-O analysis.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Algo Notes</a>
+              <a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> DP Masterclass</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-clock"></i> ~5 weeks</span>
+              <button class="mark-btn mark-start" onclick="toggleDone('cse-3', this)">Mark Done</button>
+            </div>
+            <button class="expand-btn" onclick="toggleTopics('cse-3-topics', this)">▾ Show topics</button>
+            <div class="node-topics" id="cse-3-topics">
+              <div class="topic-item"><input type="checkbox"> Sorting Algorithms</div>
+              <div class="topic-item"><input type="checkbox"> Binary Search</div>
+              <div class="topic-item"><input type="checkbox"> Dynamic Programming</div>
+              <div class="topic-item"><input type="checkbox"> Greedy Algorithms</div>
+              <div class="topic-item"><input type="checkbox"> Time & Space Complexity</div>
+            </div>
+          </div>
+
+          <div class="roadmap-node" id="node-cse-4">
+            <div class="node-top">
+              <div class="node-title">Operating Systems</div>
+              <span class="node-status status-todo">To Do</span>
+            </div>
+            <div class="node-desc">Processes, threads, scheduling, memory management, deadlocks and file systems.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> OS Notes</a>
+              <a href="#" class="res-chip chip-notes"><i class="fa-solid fa-file-lines"></i> Process Scheduling Guide</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-clock"></i> ~4 weeks</span>
+              <button class="mark-btn mark-start" onclick="toggleDone('cse-4', this)">Mark Done</button>
+            </div>
+            <button class="expand-btn" onclick="toggleTopics('cse-4-topics', this)">▾ Show topics</button>
+            <div class="node-topics" id="cse-4-topics">
+              <div class="topic-item"><input type="checkbox"> Process & Threads</div>
+              <div class="topic-item"><input type="checkbox"> CPU Scheduling</div>
+              <div class="topic-item"><input type="checkbox"> Memory Management</div>
+              <div class="topic-item"><input type="checkbox"> Deadlocks</div>
+              <div class="topic-item"><input type="checkbox"> File Systems</div>
+            </div>
+          </div>
+
+          <div class="roadmap-node" id="node-cse-5">
+            <div class="node-top">
+              <div class="node-title">Database Management (DBMS)</div>
+              <span class="node-status status-todo">To Do</span>
+            </div>
+            <div class="node-desc">ER diagrams, normalization, SQL, transactions, indexing and query optimization.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> DBMS Complete Notes</a>
+              <a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> SQL Practice</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-clock"></i> ~3 weeks</span>
+              <button class="mark-btn mark-start" onclick="toggleDone('cse-5', this)">Mark Done</button>
+            </div>
+            <button class="expand-btn" onclick="toggleTopics('cse-5-topics', this)">▾ Show topics</button>
+            <div class="node-topics" id="cse-5-topics">
+              <div class="topic-item"><input type="checkbox"> ER Diagrams</div>
+              <div class="topic-item"><input type="checkbox"> Normalization (1NF–3NF)</div>
+              <div class="topic-item"><input type="checkbox"> SQL Queries</div>
+              <div class="topic-item"><input type="checkbox"> Transactions & ACID</div>
+              <div class="topic-item"><input type="checkbox"> Indexing & B-Trees</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="roadmap-phase">
+          <div class="phase-label">🟣 Phase 3 — Advanced</div>
+
+          <div class="roadmap-node locked" id="node-cse-6">
+            <div class="node-top">
+              <div class="node-title">Computer Networks</div>
+              <span class="node-status status-lock">🔒 Locked</span>
+            </div>
+            <div class="node-desc">OSI model, TCP/IP, routing protocols, DNS, HTTP and network security basics.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> CN Notes</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span>
+            </div>
+          </div>
+
+          <div class="roadmap-node locked" id="node-cse-7">
+            <div class="node-top">
+              <div class="node-title">System Design</div>
+              <span class="node-status status-lock">🔒 Locked</span>
+            </div>
+            <div class="node-desc">Scalability, load balancing, caching, microservices and designing real-world systems.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-notes"><i class="fa-solid fa-file-lines"></i> System Design Primer</a>
+            </div>
+            <div class="node-footer">
+              <span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ MATH ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-math">
+      <div class="roadmap-header">
+        <span class="roadmap-emoji">📐</span>
+        <div>
+          <div class="roadmap-title">Mathematics Roadmap</div>
+          <div class="roadmap-desc">From algebra and calculus to discrete math and linear algebra.</div>
+        </div>
+      </div>
+      <div class="progress-label"><span>Your progress</span><span id="math-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="math-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase">
+          <div class="phase-label">🟢 Phase 1 — Foundations</div>
+          <div class="roadmap-node completed" id="node-math-1">
+            <div class="node-top"><div class="node-title">Algebra & Trigonometry</div><span class="node-status status-done">✓ Done</span></div>
+            <div class="node-desc">Equations, inequalities, polynomials, trigonometric identities and functions.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Algebra Notes</a>
+              <a href="#" class="res-chip chip-notes"><i class="fa-solid fa-file-lines"></i> Trig Identities Sheet</a>
+            </div>
+            <div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('math-1',this)">✓ Completed</button></div>
+          </div>
+          <div class="roadmap-node in-progress" id="node-math-2">
+            <div class="node-top"><div class="node-title">Differential Calculus</div><span class="node-status status-wip">In Progress</span></div>
+            <div class="node-desc">Limits, continuity, derivatives, chain rule and applications of differentiation.</div>
+            <div class="node-resources">
+              <a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Calculus Notes</a>
+              <a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Limits Video</a>
+            </div>
+            <div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('math-2',this)">Mark Done</button></div>
+          </div>
+        </div>
+        <div class="roadmap-phase">
+          <div class="phase-label">🔵 Phase 2 — Intermediate</div>
+          <div class="roadmap-node" id="node-math-3">
+            <div class="node-top"><div class="node-title">Integral Calculus</div><span class="node-status status-todo">To Do</span></div>
+            <div class="node-desc">Definite & indefinite integrals, integration techniques, and applications to area & volume.</div>
+            <div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Integration Guide</a></div>
+            <div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('math-3',this)">Mark Done</button></div>
+          </div>
+          <div class="roadmap-node" id="node-math-4">
+            <div class="node-top"><div class="node-title">Linear Algebra</div><span class="node-status status-todo">To Do</span></div>
+            <div class="node-desc">Matrices, determinants, eigenvalues, eigenvectors and vector spaces.</div>
+            <div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Linear Algebra Notes</a></div>
+            <div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('math-4',this)">Mark Done</button></div>
+          </div>
+        </div>
+        <div class="roadmap-phase">
+          <div class="phase-label">🟣 Phase 3 — Advanced</div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Discrete Mathematics</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Logic, sets, graph theory, combinatorics and number theory.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PHYSICS ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-physics">
+      <div class="roadmap-header">
+        <span class="roadmap-emoji">⚛️</span>
+        <div>
+          <div class="roadmap-title">Physics Roadmap</div>
+          <div class="roadmap-desc">Classical mechanics to quantum physics — build your intuition step by step.</div>
+        </div>
+      </div>
+      <div class="progress-label"><span>Your progress</span><span id="physics-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="physics-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Foundations</div>
+          <div class="roadmap-node completed" id="node-physics-1"><div class="node-top"><div class="node-title">Mechanics & Kinematics</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">Newton's laws, motion, forces, energy, momentum and rotational dynamics.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Mechanics Notes</a><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Newton's Laws Video</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('physics-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node" id="node-physics-2"><div class="node-top"><div class="node-title">Waves & Optics</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Wave motion, sound, light, reflection, refraction, interference and diffraction.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Waves Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('physics-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2 — Core</div>
+          <div class="roadmap-node" id="node-physics-3"><div class="node-top"><div class="node-title">Electromagnetism</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Electric fields, magnetic fields, Faraday's law, Maxwell's equations and circuits.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> EM Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~5 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('physics-3',this)">Mark Done</button></div></div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Quantum Mechanics</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Wave-particle duality, Schrödinger's equation, uncertainty principle and atomic models.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WEBDEV ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-webdev">
+      <div class="roadmap-header">
+        <span class="roadmap-emoji">🌐</span>
+        <div>
+          <div class="roadmap-title">Web Development Roadmap</div>
+          <div class="roadmap-desc">Go from zero to full-stack developer — HTML to React and beyond.</div>
+        </div>
+      </div>
+      <div class="progress-label"><span>Your progress</span><span id="webdev-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="webdev-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Frontend Basics</div>
+          <div class="roadmap-node completed" id="node-webdev-1"><div class="node-top"><div class="node-title">HTML & CSS</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">Structure, styling, flexbox, grid, responsive design and CSS animations.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> HTML/CSS Guide</a><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Flexbox Tutorial</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('webdev-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node in-progress" id="node-webdev-2"><div class="node-top"><div class="node-title">JavaScript Fundamentals</div><span class="node-status status-wip">In Progress</span></div><div class="node-desc">Variables, DOM manipulation, events, async/await, fetch API and ES6+ features.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> JS Notes</a><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> DOM Crash Course</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~5 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('webdev-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2 — Frameworks</div>
+          <div class="roadmap-node" id="node-webdev-3"><div class="node-top"><div class="node-title">React.js</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Components, props, state, hooks, context API and building real projects.</div><div class="node-resources"><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> React Tutorial</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~6 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('webdev-3',this)">Mark Done</button></div></div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Backend with Node.js</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Express, REST APIs, authentication, databases and deployment.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AI ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-ai">
+      <div class="roadmap-header">
+        <span class="roadmap-emoji">🤖</span>
+        <div>
+          <div class="roadmap-title">AI / Machine Learning Roadmap</div>
+          <div class="roadmap-desc">From statistics and Python to neural networks and real-world ML projects.</div>
+        </div>
+      </div>
+      <div class="progress-label"><span>Your progress</span><span id="ai-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="ai-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Prerequisites</div>
+          <div class="roadmap-node completed" id="node-ai-1"><div class="node-top"><div class="node-title">Python for Data Science</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">NumPy, Pandas, Matplotlib — data manipulation and visualisation.</div><div class="node-resources"><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Python DS Crash Course</a><a href="#" class="res-chip chip-notes"><i class="fa-solid fa-file-lines"></i> Pandas Cheat Sheet</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('ai-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node" id="node-ai-2"><div class="node-top"><div class="node-title">Statistics & Probability</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Distributions, hypothesis testing, Bayes theorem and statistical inference.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Stats Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('ai-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2 — Machine Learning</div>
+          <div class="roadmap-node" id="node-ai-3"><div class="node-top"><div class="node-title">ML Algorithms</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Linear regression, decision trees, SVM, clustering and model evaluation.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> ML Notes</a><a href="#" class="res-chip chip-video"><i class="fa-solid fa-video"></i> Sklearn Tutorial</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~6 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('ai-3',this)">Mark Done</button></div></div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Deep Learning & Neural Nets</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Backpropagation, CNNs, RNNs, transformers and building with PyTorch/TensorFlow.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 2 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHEMISTRY ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-chemistry">
+      <div class="roadmap-header"><span class="roadmap-emoji">🧪</span><div><div class="roadmap-title">Chemistry Roadmap</div><div class="roadmap-desc">Build strong foundations from atomic structure to organic mechanisms.</div></div></div>
+      <div class="progress-label"><span>Your progress</span><span id="chemistry-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="chemistry-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Foundations</div>
+          <div class="roadmap-node completed" id="node-chemistry-1"><div class="node-top"><div class="node-title">Atomic Structure & Bonding</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">Atomic models, periodic table, ionic, covalent and metallic bonds.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Atomic Structure Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('chemistry-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node" id="node-chemistry-2"><div class="node-top"><div class="node-title">Organic Chemistry Basics</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Hydrocarbons, functional groups, IUPAC naming and introductory reactions.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Organic Chem Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('chemistry-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2 — Advanced</div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Reaction Mechanisms</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">SN1, SN2, E1, E2, electrophilic addition and aromatic substitution.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 1 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BIOLOGY ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-biology">
+      <div class="roadmap-header"><span class="roadmap-emoji">🧬</span><div><div class="roadmap-title">Biology Roadmap</div><div class="roadmap-desc">Cell biology to genetics, anatomy and ecology.</div></div></div>
+      <div class="progress-label"><span>Your progress</span><span id="biology-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="biology-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Foundations</div>
+          <div class="roadmap-node completed" id="node-biology-1"><div class="node-top"><div class="node-title">Cell Biology</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">Cell structure, organelles, membrane transport, mitosis and meiosis.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Cell Biology Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('biology-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node" id="node-biology-2"><div class="node-top"><div class="node-title">Genetics & Heredity</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Mendelian genetics, DNA replication, transcription, translation and mutations.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Genetics Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('biology-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2</div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Human Anatomy & Physiology</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Body systems — nervous, circulatory, respiratory, endocrine and immune.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 1 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ECE ROADMAP ══ -->
+    <div class="roadmap-section" id="roadmap-ece">
+      <div class="roadmap-header"><span class="roadmap-emoji">⚡</span><div><div class="roadmap-title">Electronics & Communication Roadmap</div><div class="roadmap-desc">Circuits to signals, communication systems and embedded design.</div></div></div>
+      <div class="progress-label"><span>Your progress</span><span id="ece-pct">0% complete</span></div>
+      <div class="roadmap-progress-wrap"><div class="roadmap-progress-bar" id="ece-bar" style="width:0%"></div></div>
+      <div class="roadmap-timeline">
+        <div class="roadmap-phase"><div class="phase-label">🟢 Phase 1 — Foundations</div>
+          <div class="roadmap-node completed" id="node-ece-1"><div class="node-top"><div class="node-title">Basic Circuit Theory</div><span class="node-status status-done">✓ Done</span></div><div class="node-desc">Ohm's law, Kirchhoff's laws, mesh and nodal analysis, Thevenin and Norton.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Circuit Theory Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~3 weeks</span><button class="mark-btn mark-done" onclick="toggleDone('ece-1',this)">✓ Completed</button></div></div>
+          <div class="roadmap-node" id="node-ece-2"><div class="node-top"><div class="node-title">Digital Electronics</div><span class="node-status status-todo">To Do</span></div><div class="node-desc">Logic gates, Boolean algebra, flip-flops, counters and combinational circuits.</div><div class="node-resources"><a href="#" class="res-chip chip-pdf"><i class="fa-solid fa-file-pdf"></i> Digital Electronics Notes</a></div><div class="node-footer"><span><i class="fa-solid fa-clock"></i> ~4 weeks</span><button class="mark-btn mark-start" onclick="toggleDone('ece-2',this)">Mark Done</button></div></div>
+        </div>
+        <div class="roadmap-phase"><div class="phase-label">🔵 Phase 2 — Core</div>
+          <div class="roadmap-node locked"><div class="node-top"><div class="node-title">Signals & Systems</div><span class="node-status status-lock">🔒 Locked</span></div><div class="node-desc">Fourier transform, Laplace transform, sampling theorem and filter design.</div><div class="node-footer"><span><i class="fa-solid fa-lock"></i> Complete Phase 1 to unlock</span></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end categories-page -->
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>CampuShare</h3>
+        <p>Empowering students worldwide with accessible, high-quality academic resources.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul><li><a href="#">PDF Notes</a></li><li><a href="#">Video Lectures</a></li><li><a href="#">Study Guides</a></li><li><a href="#">Practice Exams</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <h3>Stay Updated</h3>
+        <p>Subscribe to our newsletter for the latest study tips.</p>
+        <div class="newsletter">
+          <input type="email" placeholder="Enter your email">
+          <button><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 CampuShare Inc. All rights reserved.</div>
+      <div><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Settings</a></div>
+    </div>
+  </footer>
+
+  <script>
+    const progressMap = {
+      cse:       { total: 7, done: 1, inprogress: 1 },
+      math:      { total: 4, done: 1, inprogress: 1 },
+      physics:   { total: 4, done: 1, inprogress: 0 },
+      webdev:    { total: 4, done: 1, inprogress: 1 },
+      ai:        { total: 4, done: 1, inprogress: 0 },
+      chemistry: { total: 3, done: 1, inprogress: 0 },
+      biology:   { total: 3, done: 1, inprogress: 0 },
+      ece:       { total: 3, done: 1, inprogress: 0 },
+    };
+
+    function showRoadmap(subject) {
+      // hide all
+      document.querySelectorAll('.roadmap-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('pick-hint').style.display = 'none';
+
+      // show selected
+      document.getElementById('roadmap-' + subject).classList.add('active');
+
+      // highlight card
+      const cards = document.querySelectorAll('.subject-card');
+      const subjects = ['cse','math','physics','webdev','ai','chemistry','biology','ece'];
+      cards[subjects.indexOf(subject)].classList.add('active');
+
+      // update progress
+      updateProgress(subject);
+
+      // scroll to roadmap
+      setTimeout(() => {
+        document.getElementById('roadmap-' + subject).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    function updateProgress(subject) {
+      const p = progressMap[subject];
+      const pct = Math.round((p.done / p.total) * 100);
+      document.getElementById(subject + '-bar').style.width = pct + '%';
+      document.getElementById(subject + '-pct').textContent = pct + '% complete (' + p.done + '/' + p.total + ' topics)';
+    }
+
+    function toggleDone(nodeId, btn) {
+      const node = document.getElementById('node-' + nodeId);
+      const subject = nodeId.split('-')[0];
+      const p = progressMap[subject];
+
+      if (node.classList.contains('completed')) {
+        node.classList.remove('completed');
+        node.querySelector('.node-status').className = 'node-status status-todo';
+        node.querySelector('.node-status').textContent = 'To Do';
+        btn.className = 'mark-btn mark-start';
+        btn.textContent = 'Mark Done';
+        p.done = Math.max(0, p.done - 1);
+      } else {
+        node.classList.remove('in-progress');
+        node.classList.add('completed');
+        node.querySelector('.node-status').className = 'node-status status-done';
+        node.querySelector('.node-status').textContent = '✓ Done';
+        btn.className = 'mark-btn mark-done';
+        btn.textContent = '✓ Completed';
+        p.done = Math.min(p.total, p.done + 1);
+      }
+      updateProgress(subject);
+    }
+
+    function toggleTopics(id, btn) {
+      const el = document.getElementById(id);
+      el.classList.toggle('open');
+      btn.textContent = el.classList.contains('open') ? '▴ Hide topics' : '▾ Show topics';
+    }
+  </script>
+</body>
+</html>

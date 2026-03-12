@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,10 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 </head>
 <body>
   <header class="navbar">
@@ -15,24 +20,25 @@
       <h1 class="wesite_name">CampuShare</h1>
     </div>
     <nav class="nav-links">
-      <a>Browse</a>
-      <a>Categeries</a>
-      <a>Community</a>
-      <button class="highlightbtn"><i class="fa-solid fa-upload"></i>
-      upload</button>
-      <a>SignIn</a>
+      <a href="index.html">Browse</a>
+      <a href="#">Categories</a>
+      <a href="#">Community</a>
+      <a href="#">Upload</a>
+      <a href="signin.html">SignIn</a>
     </nav>
   </header> 
   <div class="text">
     <p>Join 50,000+ students mastering their studies</p>
     <h1>Find the <span>relatable</span> resources you need to ace it.</h1>
     <h5>Access peer-reviewed PDFs, engaging video tutorials, and curated academic notes. Rated by students, for students.</h5>
-    <button class="highlightbtn">Get Started</button>
-    <button class="btndemo" class="highlightbtn"><i class="fa-solid fa-play"></i> Watch Demo</button>
-  </div>
-  <div class="search-container">
-    <input type="search" placeholder="Search for resources.......">
-    <i class="fa-solid fa-magnifying-glass"></i>
+    <div class="hero-buttons">
+      <button class="highlightbtn">Get Started</button>
+      <button class="btndemo"><i class="fa-solid fa-play"></i> Watch Demo</button>
+    </div>
+    <div class="search-container">
+      <input type="search" placeholder="Search for resources.......">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
   </div>
   
 

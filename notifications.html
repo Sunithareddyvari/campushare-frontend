@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — CampuShare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+  <style>
+    body { background: #f4f6f9; }
+    .navbar { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+
+    /* ── Page ── */
+    .notif-page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .breadcrumb { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+    .breadcrumb a { color: #aaa; text-decoration: none; }
+    .breadcrumb a:hover { color: blueviolet; }
+    .page-title { font-size: 30px; font-weight: 800; color: #1a1a2e; }
+    .unread-badge {
+      display: inline-block;
+      background: blueviolet;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn-mark-all {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: 2px solid blueviolet;
+      background: white;
+      color: blueviolet;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-mark-all:hover { background: #ede9fe; }
+    .btn-clear-all {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      color: #888;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-clear-all:hover { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
+
+    /* ── Filter chips ── */
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .chip {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1.5px solid #e5e7eb;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip:hover { border-color: blueviolet; color: blueviolet; }
+    .chip.active { background: blueviolet; color: white; border-color: blueviolet; }
+    .chip-count {
+      background: rgba(255,255,255,0.3);
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .chip.active .chip-count { background: rgba(255,255,255,0.3); }
+    .chip:not(.active) .chip-count { background: #f0f0f0; color: #888; }
+
+    /* ── Date group ── */
+    .date-group { margin-bottom: 32px; }
+    .date-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #aaa;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .date-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    /* ── Notification card ── */
+    .notif-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .notif-card.unread {
+      background: #faf8ff;
+      border-color: #e0d9ff;
+    }
+    .notif-card.unread::before {
+      content: '';
+      position: absolute;
+      left: -1px; top: 50%;
+      transform: translateY(-50%);
+      width: 4px; height: 60%;
+      background: blueviolet;
+      border-radius: 0 4px 4px 0;
+    }
+    .notif-card:hover { box-shadow: 0 4px 18px rgba(91,75,219,0.12); transform: translateX(3px); }
+    .notif-card.dismissed {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: all 0.35s ease;
+      pointer-events: none;
+    }
+
+    /* icon */
+    .notif-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* body */
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.55;
+      margin-bottom: 5px;
+    }
+    .notif-text strong { color: #1a1a2e; }
+    .notif-text .highlight { color: blueviolet; font-weight: 600; }
+    .notif-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .notif-meta span { display: flex; align-items: center; gap: 4px; }
+    .notif-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    /* right side */
+    .notif-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .notif-time { font-size: 12px; color: #bbb; white-space: nowrap; }
+    .notif-actions { display: flex; gap: 6px; }
+    .action-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-btn.read-btn:hover { background: #ede9fe; color: blueviolet; border-color: #ddd6fe; }
+    .action-btn.dismiss-btn:hover { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
+    .unread-dot {
+      width: 9px; height: 9px;
+      background: blueviolet;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 70px 20px;
+      display: none;
+    }
+    .empty-state .empty-emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+    .empty-state p { font-size: 16px; color: #aaa; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: #1a1a2e;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="logo.png" alt="logo" class="logo">
+      <h1 class="wesite_name">CampuShare</h1>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="community.html">Community</a>
+      <a href="upload.html">Upload</a>
+      <a href="signin.html">SignIn</a>
+    </nav>
+  </header>
+
+  <div class="notif-page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb"><a href="dashboard.html">← Dashboard</a> / Notifications</div>
+        <div class="page-title">
+          Notifications
+          <span class="unread-badge" id="unread-count">4 unread</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-mark-all" onclick="markAllRead()"><i class="fa-solid fa-check-double"></i> Mark all read</button>
+        <button class="btn-clear-all" onclick="clearAll()"><i class="fa-solid fa-trash"></i> Clear all</button>
+      </div>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="filter-chips">
+      <div class="chip active" onclick="filterNotifs('all', this)">
+        <i class="fa-solid fa-bell"></i> All <span class="chip-count" id="count-all">8</span>
+      </div>
+      <div class="chip" onclick="filterNotifs('download', this)">
+        <i class="fa-solid fa-download"></i> Downloads <span class="chip-count" id="count-download">3</span>
+      </div>
+      <div class="chip" onclick="filterNotifs('reply', this)">
+        <i class="fa-solid fa-reply"></i> Replies <span class="chip-count" id="count-reply">2</span>
+      </div>
+      <div class="chip" onclick="filterNotifs('upload', this)">
+        <i class="fa-solid fa-circle-check"></i> Uploads <span class="chip-count" id="count-upload">2</span>
+      </div>
+      <div class="chip" onclick="filterNotifs('group', this)">
+        <i class="fa-solid fa-people-group"></i> Groups <span class="chip-count" id="count-group">1</span>
+      </div>
+    </div>
+
+    <!-- ── TODAY ── -->
+    <div class="date-group" id="group-today">
+      <div class="date-label">Today</div>
+
+      <div class="notif-card unread" data-type="download" data-id="n1">
+        <div class="notif-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-download"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Ananya P.</strong> downloaded your <span class="highlight">DBMS Complete Notes — Unit 1–5</span></div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> 2 hours ago</span>
+            <span class="notif-tag" style="background:#dcfce7; color:#16a34a;">Download</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">10:24 AM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n1', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n1')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+
+      <div class="notif-card unread" data-type="reply" data-id="n2">
+        <div class="notif-icon" style="background:#dbeafe; color:#3b82f6;"><i class="fa-solid fa-reply"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Kiran N.</strong> replied to your doubt — <span class="highlight">"How does dynamic programming differ from recursion?"</span></div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> 4 hours ago</span>
+            <span class="notif-tag" style="background:#dbeafe; color:#3b82f6;">Reply</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">8:15 AM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n2', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n2')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+
+      <div class="notif-card unread" data-type="upload" data-id="n3">
+        <div class="notif-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="notif-body">
+          <div class="notif-text">Your upload <span class="highlight">"OS Concepts — Process Scheduling"</span> has been <strong>approved</strong> and is now live! 🎉</div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> 6 hours ago</span>
+            <span class="notif-tag" style="background:#dcfce7; color:#16a34a;">Approved</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">6:40 AM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n3', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n3')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+
+    </div>
+
+    <!-- ── YESTERDAY ── -->
+    <div class="date-group" id="group-yesterday">
+      <div class="date-label">Yesterday</div>
+
+      <div class="notif-card" data-type="download" data-id="n4">
+        <div class="notif-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-download"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Sneha M.</strong> downloaded your <span class="highlight">Data Structures Slides — Unit 3</span></div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> Yesterday, 3:10 PM</span>
+            <span class="notif-tag" style="background:#dcfce7; color:#16a34a;">Download</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">3:10 PM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n4', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n4')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-card unread" data-type="group" data-id="n5">
+        <div class="notif-icon" style="background:#ede9fe; color:blueviolet;"><i class="fa-solid fa-people-group"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Ravi K.</strong> joined your study group <span class="highlight">DSA Crackdown</span>. You now have 129 members!</div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> Yesterday, 1:45 PM</span>
+            <span class="notif-tag" style="background:#ede9fe; color:blueviolet;">Group</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">1:45 PM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n5', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n5')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="unread-dot"></div>
+      </div>
+
+      <div class="notif-card" data-type="upload" data-id="n6">
+        <div class="notif-icon" style="background:#fee2e2; color:#ef4444;"><i class="fa-solid fa-circle-xmark"></i></div>
+        <div class="notif-body">
+          <div class="notif-text">Your upload <span class="highlight">"Thermodynamics Quick Notes"</span> was <strong style="color:#ef4444;">rejected</strong>. Reason: incomplete content. Please revise and resubmit.</div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> Yesterday, 11:00 AM</span>
+            <span class="notif-tag" style="background:#fee2e2; color:#ef4444;">Rejected</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">11:00 AM</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n6', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n6')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── THIS WEEK ── -->
+    <div class="date-group" id="group-week">
+      <div class="date-label">This Week</div>
+
+      <div class="notif-card" data-type="download" data-id="n7">
+        <div class="notif-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-download"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Meera T.</strong> downloaded your <span class="highlight">CN Lab Manual — Experiments 1–10</span></div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> Monday, 9:30 AM</span>
+            <span class="notif-tag" style="background:#dcfce7; color:#16a34a;">Download</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">Mon</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n7', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n7')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-card" data-type="reply" data-id="n8">
+        <div class="notif-icon" style="background:#dbeafe; color:#3b82f6;"><i class="fa-solid fa-reply"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>Priya S.</strong> replied to your forum post — <span class="highlight">"Best way to remember organic chemistry reactions?"</span></div>
+          <div class="notif-meta">
+            <span><i class="fa-regular fa-clock"></i> Sunday, 7:15 PM</span>
+            <span class="notif-tag" style="background:#dbeafe; color:#3b82f6;">Reply</span>
+          </div>
+        </div>
+        <div class="notif-right">
+          <span class="notif-time">Sun</span>
+          <div class="notif-actions">
+            <button class="action-btn read-btn" title="Mark as read" onclick="markRead('n8', this)"><i class="fa-solid fa-check"></i></button>
+            <button class="action-btn dismiss-btn" title="Dismiss" onclick="dismiss('n8')"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state">
+      <span class="empty-emoji">🔔</span>
+      <p>You're all caught up! No notifications here.</p>
+    </div>
+
+  </div><!-- end notif-page -->
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>CampuShare</h3>
+        <p>Empowering students worldwide with accessible, high-quality academic resources.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul><li><a href="#">PDF Notes</a></li><li><a href="#">Video Lectures</a></li><li><a href="#">Study Guides</a></li><li><a href="#">Practice Exams</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li></ul>
+      </div>
+      <div class="footer-column">
+        <h3>Stay Updated</h3>
+        <p>Subscribe to our newsletter for the latest study tips.</p>
+        <div class="newsletter">
+          <input type="email" placeholder="Enter your email">
+          <button><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 CampuShare Inc. All rights reserved.</div>
+      <div><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Settings</a></div>
+    </div>
+  </footer>
+
+  <script>
+    let unreadIds = new Set(['n1','n2','n3','n5']);
+    let dismissed = new Set();
+    let activeFilter = 'all';
+
+    function updateUnreadCount() {
+      const count = unreadIds.size;
+      const el = document.getElementById('unread-count');
+      el.textContent = count > 0 ? count + ' unread' : 'all read';
+      el.style.background = count > 0 ? 'blueviolet' : '#16a34a';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function markRead(id, btn) {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      card.classList.remove('unread');
+      const dot = card.querySelector('.unread-dot');
+      if (dot) dot.remove();
+      unreadIds.delete(id);
+      updateUnreadCount();
+      showToast('✓ Marked as read');
+    }
+
+    function dismiss(id) {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      card.classList.add('dismissed');
+      dismissed.add(id);
+      unreadIds.delete(id);
+      updateUnreadCount();
+      setTimeout(() => {
+        card.style.display = 'none';
+        checkEmpty();
+        updateCounts();
+      }, 350);
+      showToast('Notification dismissed');
+    }
+
+    function markAllRead() {
+      document.querySelectorAll('.notif-card.unread').forEach(card => {
+        card.classList.remove('unread');
+        const dot = card.querySelector('.unread-dot');
+        if (dot) dot.remove();
+      });
+      unreadIds.clear();
+      updateUnreadCount();
+      showToast('✓ All notifications marked as read');
+    }
+
+    function clearAll() {
+      const visible = document.querySelectorAll('.notif-card:not([style*="display: none"])');
+      visible.forEach(card => {
+        card.classList.add('dismissed');
+        setTimeout(() => { card.style.display = 'none'; }, 350);
+      });
+      unreadIds.clear();
+      updateUnreadCount();
+      setTimeout(() => { checkEmpty(); }, 400);
+      showToast('🗑 All notifications cleared');
+    }
+
+    function filterNotifs(type, chipEl) {
+      activeFilter = type;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+
+      document.querySelectorAll('.notif-card').forEach(card => {
+        if (card.style.display === 'none' && dismissed.has(card.dataset.id)) return;
+        const match = type === 'all' || card.dataset.type === type;
+        card.style.display = match ? 'flex' : 'none';
+      });
+
+      // hide empty groups
+      ['today','yesterday','week'].forEach(g => {
+        const group = document.getElementById('group-' + g);
+        const visible = group.querySelectorAll('.notif-card:not([style*="display: none"])');
+        group.style.display = visible.length > 0 ? 'block' : 'none';
+      });
+
+      checkEmpty();
+    }
+
+    function checkEmpty() {
+      const anyVisible = document.querySelectorAll('.notif-card:not([style*="display: none"])').length > 0;
+      document.getElementById('empty-state').style.display = anyVisible ? 'none' : 'block';
+    }
+
+    function updateCounts() {
+      const types = ['download','reply','upload','group'];
+      let total = 0;
+      types.forEach(t => {
+        const count = document.querySelectorAll(`.notif-card[data-type="${t}"]:not([style*="display: none"])`).length;
+        document.getElementById('count-' + t).textContent = count;
+        total += count;
+      });
+      document.getElementById('count-all').textContent = total;
+    }
+
+    // click card to mark read
+    document.querySelectorAll('.notif-card').forEach(card => {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.action-btn')) return;
+        const id = this.dataset.id;
+        if (this.classList.contains('unread')) {
+          markRead(id);
+        }
+      });
+    });
+
+    updateUnreadCount();
+  </script>
+</body>
+</html>

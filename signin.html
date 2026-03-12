@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — CampuShare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+  <style>
+    body { background: #f4f6f9; }
+
+    /* reuse navbar exactly */
+    .navbar { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+
+    /* ---- Page layout ---- */
+    .signin-page {
+      display: flex;
+      min-height: calc(100vh - 110px);
+    }
+
+    /* LEFT panel */
+    .signin-left {
+      flex: 1;
+      background: blueviolet;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 60px;
+      color: white;
+    }
+    .signin-left h2 {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    .signin-left p {
+      font-size: 17px;
+      opacity: 0.88;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      color: white;
+    }
+    .left-feature {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+    .left-feature i {
+      background: rgba(255,255,255,0.2);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 18px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .left-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,0.25);
+    }
+    .left-stat-num { font-size: 28px; font-weight: 800; display: block; }
+    .left-stat-label { font-size: 13px; opacity: 0.75; }
+
+    /* RIGHT panel */
+    .signin-right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 30px;
+      background: #fff;
+    }
+    .signin-box {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Tabs */
+    .auth-tabs {
+      display: flex;
+      background: #f0f0f0;
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 30px;
+      gap: 5px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #777;
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: white;
+      color: blueviolet;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    .signin-box h3 { font-size: 24px; font-weight: 700; margin-bottom: 6px; color: #1a1a2e; }
+    .signin-box .sub { font-size: 14px; color: #888; margin-bottom: 26px; }
+
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 7px; }
+    .field input, .field select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+      color: #333;
+      background: #fafafa;
+      transition: border 0.2s;
+    }
+    .field input:focus, .field select:focus { border-color: blueviolet; background: white; }
+    .field input::placeholder { color: #bbb; }
+
+    .pass-wrap { position: relative; }
+    .pass-wrap input { padding-right: 44px; }
+    .pass-eye {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      border: none; background: none;
+      color: #aaa; cursor: pointer; font-size: 15px;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .forgot { text-align: right; font-size: 12px; margin-top: 6px; }
+    .forgot a { color: blueviolet; text-decoration: none; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: blueviolet;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 6px;
+    }
+    .btn-submit:hover { background: #4838c2; transform: translateY(-1px); }
+
+    .divider-or {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; font-size: 13px; color: #aaa;
+    }
+    .divider-or::before, .divider-or::after {
+      content: ''; flex: 1; height: 1px; background: #e5e7eb;
+    }
+
+    .btn-google {
+      width: 100%; padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 15px;
+      background: white;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer; color: #333;
+      transition: all 0.2s;
+    }
+    .btn-google:hover { border-color: blueviolet; background: #f3f0ff; }
+    .btn-google img { width: 20px; }
+
+    .switch-text {
+      text-align: center; font-size: 14px; color: #777; margin-top: 20px;
+    }
+    .switch-text a { color: blueviolet; font-weight: 700; text-decoration: none; }
+
+    @media (max-width: 768px) {
+      .signin-left { display: none; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EXACT SAME NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="logo.png" alt="logo" class="logo">
+      <h1 class="wesite_name">CampuShare</h1>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="community.html">Community</a>
+      <a href="upload.html">Upload</a>
+      <a href="signin.html">SignIn</a>
+    </nav>
+  </header>
+
+  <div class="signin-page">
+
+    <!-- LEFT: brand panel -->
+    <div class="signin-left">
+      <h2>Your campus.<br>Your resources.<br>Your success.</h2>
+      <p>Join thousands of students sharing notes,<br>question papers, and lab manuals.</p>
+
+      <div class="left-feature">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>12,000+ Study Resources across all subjects</span>
+      </div>
+      <div class="left-feature">
+        <i class="fa-solid fa-star"></i>
+        <span>Peer-rated quality — by students, for students</span>
+      </div>
+      <div class="left-feature">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Earn points by uploading resources</span>
+      </div>
+
+      <div class="left-stats">
+        <div>
+          <span class="left-stat-num">50K+</span>
+          <span class="left-stat-label">Students</span>
+        </div>
+        <div>
+          <span class="left-stat-num">12K+</span>
+          <span class="left-stat-label">Resources</span>
+        </div>
+        <div>
+          <span class="left-stat-num">340+</span>
+          <span class="left-stat-label">Subjects</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: form -->
+    <div class="signin-right">
+      <div class="signin-box">
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchTab('signin')">Sign In</button>
+          <button class="auth-tab" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <!-- SIGN IN FORM -->
+        <div class="form-panel active" id="panel-signin">
+          <h3>Welcome back!</h3>
+          <p class="sub">Sign in to access your saved resources.</p>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" placeholder="you@college.edu">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <div class="pass-wrap">
+              <input type="password" id="pass1" placeholder="Enter your password">
+              <button class="pass-eye" onclick="togglePass('pass1',this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <div class="forgot"><a href="#">Forgot password?</a></div>
+          </div>
+          <a href="dashboard.html"><button class="btn-submit">Sign In <i class="fa-solid fa-arrow-right"></i></button></a>
+          <div class="divider-or">or continue with</div>
+          <button class="btn-google">
+            <img src="https://www.google.com/favicon.ico" alt="G"> Continue with Google
+          </button>
+          <div class="switch-text">Don't have an account? <a href="#" onclick="switchTab('signup')">Create one free</a></div>
+        </div>
+
+        <!-- SIGN UP FORM -->
+        <div class="form-panel" id="panel-signup">
+          <h3>Join CampuShare</h3>
+          <p class="sub">Create your free account today.</p>
+          <div class="two-col">
+            <div class="field"><label>First Name</label><input type="text" placeholder="Rahul"></div>
+            <div class="field"><label>Last Name</label><input type="text" placeholder="Kumar"></div>
+          </div>
+          <div class="field"><label>College Email</label><input type="email" placeholder="you@college.edu"></div>
+          <div class="field">
+            <label>Branch</label>
+            <select>
+              <option value="">Select your branch</option>
+              <option>Computer Science (CSE)</option>
+              <option>Electronics & Communication (ECE)</option>
+              <option>Mechanical Engineering</option>
+              <option>Civil Engineering</option>
+              <option>Electrical Engineering (EEE)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Academic Year</label>
+            <select>
+              <option value="">Select year</option>
+              <option>1st Year</option><option>2nd Year</option>
+              <option>3rd Year</option><option>4th Year</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <div class="pass-wrap">
+              <input type="password" id="pass2" placeholder="Min. 8 characters">
+              <button class="pass-eye" onclick="togglePass('pass2',this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+          </div>
+          <a href="dashboard.html"><button class="btn-submit">Create Account <i class="fa-solid fa-arrow-right"></i></button></a>
+          <div class="divider-or">or</div>
+          <button class="btn-google"><img src="https://www.google.com/favicon.ico" alt="G"> Sign up with Google</button>
+          <div class="switch-text">Already have an account? <a href="#" onclick="switchTab('signin')">Sign in</a></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t,i) =>
+        t.classList.toggle('active', (tab==='signin'&&i===0)||(tab==='signup'&&i===1)));
+      document.getElementById('panel-signin').classList.toggle('active', tab==='signin');
+      document.getElementById('panel-signup').classList.toggle('active', tab==='signup');
+    }
+    function togglePass(id, btn) {
+      const el = document.getElementById(id);
+      el.type = el.type==='password' ? 'text' : 'password';
+      btn.innerHTML = el.type==='text'
+        ? '<i class="fa-regular fa-eye-slash"></i>'
+        : '<i class="fa-regular fa-eye"></i>';
+    }
+  </script>
+</body>
+</html>

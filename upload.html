@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Resource — CampuShare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+  <style>
+    body { background: #f4f6f9; }
+    .navbar { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+
+    .upload-page { max-width: 950px; margin: 0 auto; padding: 36px 24px 60px; }
+
+    .page-header { margin-bottom: 30px; }
+    .breadcrumb { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+    .breadcrumb a { color: #aaa; text-decoration: none; }
+    .breadcrumb a:hover { color: blueviolet; }
+    .page-title { font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+    .page-sub { font-size: 15px; color: #888; }
+
+    .upload-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+
+    /* DROP ZONE */
+    .dropzone {
+      border: 3px dashed #ccc;
+      border-radius: 16px;
+      padding: 52px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+      margin-bottom: 20px;
+    }
+    .dropzone:hover, .dropzone.over {
+      border-color: blueviolet;
+      background: #f3f0ff;
+    }
+    .dropzone-icon {
+      width: 70px; height: 70px; border-radius: 18px;
+      background: #ede9fe; color: blueviolet;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin: 0 auto 18px;
+    }
+    .dropzone h3 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+    .dropzone p { font-size: 14px; color: #888; margin-bottom: 18px; }
+    .file-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .file-chip {
+      padding: 4px 12px; border-radius: 7px;
+      font-size: 12px; font-weight: 700; color: white;
+    }
+    .dropzone input[type="file"] { display: none; }
+
+    /* File preview */
+    .file-preview {
+      display: none; background: #f5f5f5;
+      border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 20px;
+      align-items: center; gap: 12px;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .file-name { font-size: 14px; font-weight: 600; color: #1a1a2e; flex: 1; }
+    .file-size { font-size: 12px; color: #aaa; }
+    .remove-file {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: #fee2e2; border: none; color: #ef4444;
+      font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Form card */
+    .form-card {
+      background: #fff; border-radius: 16px; padding: 28px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .form-card h3 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 22px; }
+
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 7px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 12px 15px;
+      border: 2px solid #e5e7eb; border-radius: 12px;
+      font-size: 14px; color: #333; background: #fafafa;
+      outline: none; transition: border 0.2s;
+      font-family: Arial, sans-serif;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: blueviolet; background: white;
+    }
+    .field input::placeholder, .field textarea::placeholder { color: #bbb; }
+    .field textarea { resize: vertical; min-height: 95px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .btn-submit {
+      width: 100%; padding: 15px;
+      background: blueviolet; color: white;
+      border: none; border-radius: 15px;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.5px; transition: background 0.2s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 8px;
+    }
+    .btn-submit:hover { background: #4838c2; transform: translateY(-1px); }
+    .submit-note { font-size: 12px; color: #aaa; text-align: center; margin-top: 10px; }
+
+    /* Guidelines card */
+    .guide-card {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .guide-card h4 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
+    .guide-section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 8px; margin-top: 14px;
+    }
+    .guide-item {
+      display: flex; gap: 10px;
+      font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 10px;
+    }
+    .guide-item i { font-size: 13px; margin-top: 2px; flex-shrink: 0; }
+
+    .info-box { border-radius: 12px; padding: 15px; margin-top: 16px; }
+    .info-box h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .info-box p { font-size: 12px; line-height: 1.7; margin: 0; }
+
+    /* Success modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 20px;
+      padding: 44px 36px; text-align: center;
+      max-width: 400px; width: 90%;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      animation: pop 0.3s ease;
+    }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-icon {
+      width: 75px; height: 75px; border-radius: 50%;
+      background: #dcfce7; color: #16a34a;
+      font-size: 32px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .modal h3 { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 8px; }
+    .modal p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 26px; }
+    .modal-btns { display: flex; gap: 12px; justify-content: center; }
+    .modal-btn-primary {
+      padding: 12px 24px; background: blueviolet; color: white;
+      border: none; border-radius: 12px; font-size: 14px;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .modal-btn-primary:hover { background: #4838c2; }
+    .modal-btn-ghost {
+      padding: 12px 24px; background: #f5f5f5; color: #555;
+      border: none; border-radius: 12px; font-size: 14px;
+      font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .modal-btn-ghost:hover { background: #eee; }
+
+    @media (max-width: 768px) {
+      .upload-grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EXACT SAME NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="logo.png" alt="logo" class="logo">
+      <h1 class="wesite_name">CampuShare</h1>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="community.html">Community</a>
+      <a href="upload.html">Upload</a>
+      <a href="signin.html">SignOut</a>
+    </nav>
+  </header>
+
+  <div class="upload-page">
+
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">← Dashboard</a> / Upload Resource
+      </div>
+      <h1 class="page-title">Upload a Resource</h1>
+      <p class="page-sub">Share your notes, papers, or lab manuals with fellow students.</p>
+    </div>
+
+    <div class="upload-grid">
+
+      <!-- LEFT -->
+      <div>
+        <!-- Drop zone -->
+        <div class="dropzone" id="dropzone"
+          onclick="document.getElementById('fileInput').click()"
+          ondragover="handleDrag(event,true)"
+          ondragleave="handleDrag(event,false)"
+          ondrop="handleDrop(event)">
+          <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png" onchange="handleFile(this.files[0])">
+          <div class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <h3>Drop your file here</h3>
+          <p>or click to browse from your computer</p>
+          <div class="file-chips">
+            <span class="file-chip" style="background:#ef4444;">PDF</span>
+            <span class="file-chip" style="background:#8b5cf6;">DOC</span>
+            <span class="file-chip" style="background:#f59e0b;">PPT</span>
+            <span class="file-chip" style="background:#3b82f6;">VIDEO</span>
+            <span class="file-chip" style="background:#10b981;">IMG</span>
+          </div>
+        </div>
+
+        <!-- File preview -->
+        <div class="file-preview" id="filePreview">
+          <div class="file-preview-icon" id="previewIcon" style="background:#fee2e2;color:#ef4444;">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <div style="flex:1;">
+            <div class="file-name" id="previewName">document.pdf</div>
+            <div class="file-size" id="previewSize">2.4 MB</div>
+          </div>
+          <button class="remove-file" onclick="removeFile()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Form -->
+        <div class="form-card">
+          <h3>Resource Details</h3>
+
+          <div class="field">
+            <label>Title <span style="color:#ef4444;">*</span></label>
+            <input type="text" placeholder="e.g. DBMS Complete Notes Unit 1–5">
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea placeholder="Briefly describe what this resource covers..."></textarea>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label>Branch <span style="color:#ef4444;">*</span></label>
+              <select>
+                <option value="">Select branch</option>
+                <option>Computer Science (CSE)</option>
+                <option>Electronics & Communication (ECE)</option>
+                <option>Mechanical Engineering</option>
+                <option>Civil Engineering</option>
+                <option>Electrical Engineering (EEE)</option>
+                <option>Chemical Engineering</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Academic Year <span style="color:#ef4444;">*</span></label>
+              <select>
+                <option value="">Select year</option>
+                <option>1st Year</option>
+                <option>2nd Year</option>
+                <option>3rd Year</option>
+                <option>4th Year</option>
+              </select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label>Subject <span style="color:#ef4444;">*</span></label>
+              <input type="text" placeholder="e.g. Database Management Systems">
+            </div>
+            <div class="field">
+              <label>Resource Type <span style="color:#ef4444;">*</span></label>
+              <select>
+                <option value="">Select type</option>
+                <option>Notes / Handouts</option>
+                <option>Question Paper</option>
+                <option>Lab Manual</option>
+                <option>Slides / PPT</option>
+                <option>Video Lecture</option>
+                <option>Reference Book</option>
+                <option>Study Guide</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Tags <span style="font-size:11px;color:#aaa;font-weight:400;">(comma-separated)</span></label>
+            <input type="text" placeholder="e.g. sql, normalization, er-diagram">
+          </div>
+
+          <button class="btn-submit" onclick="showSuccess()">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i> Submit for Review
+          </button>
+          <p class="submit-note"><i class="fa-solid fa-shield-halved"></i> All uploads are reviewed before going live. Usually within 24 hours.</p>
+        </div>
+      </div>
+
+      <!-- RIGHT: Guidelines -->
+      <div class="guide-card">
+        <h4>📋 Upload Guidelines</h4>
+
+        <div class="guide-section-label" style="color:#16a34a;">✅ Allowed</div>
+        <div class="guide-item"><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Your own notes or handwritten materials</div>
+        <div class="guide-item"><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> University question papers (previous years)</div>
+        <div class="guide-item"><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Lab manuals and experiment write-ups</div>
+        <div class="guide-item"><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Summarized study guides you created</div>
+
+        <div class="guide-section-label" style="color:#ef4444;">❌ Not Allowed</div>
+        <div class="guide-item"><i class="fa-solid fa-times-circle" style="color:#ef4444;"></i> Copyrighted textbooks or paid content</div>
+        <div class="guide-item"><i class="fa-solid fa-times-circle" style="color:#ef4444;"></i> Someone else's work without permission</div>
+        <div class="guide-item"><i class="fa-solid fa-times-circle" style="color:#ef4444;"></i> Incomplete or illegible documents</div>
+        <div class="guide-item"><i class="fa-solid fa-times-circle" style="color:#ef4444;"></i> Spam, ads, or promotional content</div>
+
+        <div class="info-box" style="background:#f5f5f5;">
+          <h5>📁 File Requirements</h5>
+          <p style="color:#555;">Max size: <strong>50 MB</strong><br>
+          Formats: <strong>PDF, DOC, DOCX, PPT, PPTX, MP4, JPG, PNG</strong><br>
+          Language: <strong>English or regional with English title</strong></p>
+        </div>
+
+        <div class="info-box" style="background:#ede9fe;">
+          <h5 style="color:blueviolet;">🏆 Earn Points!</h5>
+          <p style="color:blueviolet;opacity:0.85;">Every approved upload earns you <strong>50 points</strong>. Get rated highly and earn bonus points. Climb the leaderboard!</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUCCESS MODAL -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-icon"><i class="fa-solid fa-check"></i></div>
+      <h3>Upload Submitted!</h3>
+      <p>Your resource has been submitted for review. Our team will approve it within 24 hours and you'll be notified once it's live.</p>
+      <div class="modal-btns">
+        <a href="dashboard.html" class="modal-btn-primary">Go to Dashboard</a>
+        <button class="modal-btn-ghost" onclick="closeModal()">Upload Another</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>CampuShare</h3>
+        <p>Empowering students worldwide with accessible, high-quality academic resources.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#">PDF Notes</a></li>
+          <li><a href="#">Video Lectures</a></li>
+          <li><a href="#">Study Guides</a></li>
+          <li><a href="#">Practice Exams</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Stay Updated</h3>
+        <p>Subscribe to our newsletter for the latest study tips.</p>
+        <div class="newsletter">
+          <input type="email" placeholder="Enter your email">
+          <button><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 CampuShare. All rights reserved.</div>
+      <div>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Settings</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleDrag(e, over) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.toggle('over', over);
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.remove('over');
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    }
+    function handleFile(file) {
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      const map = {
+        pdf:  ['fa-file-pdf', '#fee2e2', '#ef4444'],
+        doc:  ['fa-file-word', '#dbeafe', '#3b82f6'],
+        docx: ['fa-file-word', '#dbeafe', '#3b82f6'],
+        ppt:  ['fa-file-powerpoint', '#fef3c7', '#d97706'],
+        pptx: ['fa-file-powerpoint', '#fef3c7', '#d97706'],
+        mp4:  ['fa-video', '#ede9fe', 'blueviolet'],
+      };
+      const [icon, bg, color] = map[ext] || ['fa-file', '#f3f4f6', '#888'];
+      const ico = document.getElementById('previewIcon');
+      ico.style.background = bg; ico.style.color = color;
+      ico.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+      document.getElementById('previewName').textContent = file.name;
+      document.getElementById('previewSize').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
+      document.getElementById('filePreview').classList.add('show');
+      document.getElementById('dropzone').style.display = 'none';
+    }
+    function removeFile() {
+      document.getElementById('filePreview').classList.remove('show');
+      document.getElementById('dropzone').style.display = '';
+      document.getElementById('fileInput').value = '';
+    }
+    function showSuccess() { document.getElementById('modal').classList.add('show'); }
+    function closeModal() { document.getElementById('modal').classList.remove('show'); removeFile(); }
+  </script>
+</body>
+</html>

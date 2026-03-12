@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampuShare — Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --purple: blueviolet;
+      --purple-hex: #8a2be2;
+      --purple-light: #a855f7;
+      --purple-dim: #f3eeff;
+      --purple-mid: #ede0ff;
+      --purple-glow: rgba(138, 43, 226, 0.12);
+      --white: #ffffff;
+      --bg: #f7f4ff;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --border: #e8d9ff;
+      --border-strong: #c4a4f0;
+      --text: #1a0a2e;
+      --muted: #7a6a96;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ───────────────────────── */
+    .sidebar {
+      width: 255px;
+      background: var(--white);
+      border-right: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      box-shadow: 4px 0 24px rgba(138,43,226,0.06);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 26px 22px 24px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, blueviolet, #c084fc);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(138,43,226,0.28);
+    }
+
+    .sidebar-logo h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-logo h2 span { color: blueviolet; }
+
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 20px 22px 7px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 11px 22px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.18s;
+      border-left: 3px solid transparent;
+      margin: 1px 0;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { color: blueviolet; background: var(--purple-dim); }
+
+    .nav-item.active {
+      color: blueviolet;
+      background: var(--purple-dim);
+      border-left-color: blueviolet;
+      font-weight: 600;
+    }
+
+    .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: blueviolet;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 18px 22px;
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      background: var(--purple-dim);
+    }
+
+    .admin-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, blueviolet, #c084fc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 800; color: white;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(138,43,226,0.3);
+    }
+
+    .admin-info { flex: 1; }
+    .admin-info .name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .admin-info .role { font-size: 11px; color: blueviolet; font-weight: 500; }
+
+    /* ── Main ──────────────────────────── */
+    .main { margin-left: 255px; flex: 1; display: flex; flex-direction: column; }
+
+    /* ── Topbar ────────────────────────── */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1.5px solid var(--border);
+      padding: 16px 34px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      position: sticky;
+      top: 0; z-index: 50;
+      box-shadow: 0 2px 12px rgba(138,43,226,0.06);
+    }
+
+    .topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800; color: var(--text); }
+    .topbar-left p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    .search-bar {
+      display: flex; align-items: center;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 25px;
+      padding: 9px 18px; gap: 10px; width: 240px; transition: 0.2s;
+    }
+
+    .search-bar:focus-within { border-color: blueviolet; box-shadow: 0 0 0 3px var(--purple-glow); }
+    .search-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; width: 100%; font-family: 'DM Sans', sans-serif; }
+    .search-bar i { color: var(--muted); font-size: 13px; }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); font-size: 14px; transition: 0.2s; position: relative;
+    }
+
+    .icon-btn:hover { color: blueviolet; border-color: blueviolet; }
+
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: blueviolet; border-radius: 50%; border: 2px solid white; }
+
+    .upload-topbtn {
+      background: blueviolet; color: white; border: none; border-radius: 25px;
+      padding: 10px 20px; font-size: 13px; font-weight: 600;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      display: flex; align-items: center; gap: 8px; transition: 0.2s;
+      box-shadow: 0 4px 14px rgba(138,43,226,0.3); letter-spacing: 0.3px;
+    }
+
+    .upload-topbtn:hover { background: #7300cc; transform: translateY(-1px); }
+
+    /* ── Content ───────────────────────── */
+    .content { padding: 28px 34px; flex: 1; }
+
+    /* ── Quick Actions ─────────────────── */
+    .quick-actions { display: flex; gap: 14px; margin-bottom: 24px; }
+
+    .action-btn {
+      flex: 1; background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 11px; cursor: pointer;
+      transition: 0.18s; color: var(--text); font-size: 13px; font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .action-btn:hover { border-color: blueviolet; background: var(--purple-dim); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(138,43,226,0.1); }
+
+    .action-btn .aicon {
+      width: 34px; height: 34px; background: var(--purple-dim); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: blueviolet; font-size: 14px; flex-shrink: 0; transition: 0.18s;
+    }
+
+    .action-btn:hover .aicon { background: blueviolet; color: white; }
+
+    .action-btn.primary { background: blueviolet; border-color: blueviolet; color: white; box-shadow: 0 6px 20px rgba(138,43,226,0.3); }
+    .action-btn.primary .aicon { background: rgba(255,255,255,0.2); color: white; }
+    .action-btn.primary:hover { background: #7300cc; border-color: #7300cc; }
+
+    /* ── Stats ─────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 24px; }
+
+    .stat-card {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: 18px;
+      padding: 22px; position: relative; overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+    }
+
+    .stat-card::after { content: ''; position: absolute; bottom: -18px; right: -18px; width: 80px; height: 80px; border-radius: 50%; opacity: 0.08; }
+    .stat-card.v::after { background: blueviolet; }
+    .stat-card.g::after { background: var(--success); }
+    .stat-card.b::after { background: var(--blue); }
+    .stat-card.a::after { background: var(--warning); }
+
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(138,43,226,0.12); border-color: var(--border-strong); }
+
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; margin-bottom: 14px; }
+    .stat-card.v .stat-icon { background: var(--purple-dim); color: blueviolet; }
+    .stat-card.g .stat-icon { background: #d1fae5; color: var(--success); }
+    .stat-card.b .stat-icon { background: #dbeafe; color: var(--blue); }
+    .stat-card.a .stat-icon { background: #fef3c7; color: var(--warning); }
+
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; line-height: 1; margin-bottom: 5px; color: var(--text); }
+    .stat-label { font-size: 13px; color: var(--muted); }
+
+    .stat-change { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .stat-change.up { color: var(--success); background: #d1fae5; }
+    .stat-change.warn { color: var(--warning); background: #fef3c7; }
+
+    /* ── Mid Row ───────────────────────── */
+    .mid-row { display: grid; grid-template-columns: 1fr 320px; gap: 18px; margin-bottom: 24px; }
+
+    .card { background: var(--white); border: 1.5px solid var(--border); border-radius: 18px; padding: 24px; }
+
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .card-header h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .card-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .pill-tabs { display: flex; gap: 6px; }
+
+    .pill-tab {
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px;
+      padding: 5px 14px; font-size: 12px; color: var(--muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-weight: 500; transition: 0.18s;
+    }
+
+    .pill-tab:hover { border-color: blueviolet; color: blueviolet; }
+    .pill-tab.active { background: blueviolet; color: white; border-color: blueviolet; }
+
+    /* ── Chart ─────────────────────────── */
+    .chart-area { height: 170px; display: flex; align-items: flex-end; gap: 8px; border-bottom: 1.5px solid var(--border); margin-bottom: 14px; }
+
+    .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+    .bar-wrap { width: 100%; display: flex; gap: 3px; align-items: flex-end; height: 150px; }
+
+    .bar { flex: 1; border-radius: 6px 6px 0 0; cursor: pointer; transition: opacity 0.2s; animation: growUp 0.7s cubic-bezier(.34,1.4,.64,1) both; transform-origin: bottom; }
+    .bar:hover { opacity: 0.7; }
+    .bar.pdf { background: linear-gradient(180deg, blueviolet 0%, #c084fc 100%); }
+    .bar.vid { background: linear-gradient(180deg, #bba3f0 0%, #e9d5ff 100%); }
+
+    @keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+    .bar-label { font-size: 10px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+    .chart-legend { display: flex; gap: 18px; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* ── Subjects ──────────────────────── */
+    .subject-list { display: flex; flex-direction: column; gap: 14px; }
+    .subject-item { display: flex; flex-direction: column; gap: 6px; }
+    .subject-top { display: flex; justify-content: space-between; font-size: 13px; }
+    .subject-name { font-weight: 500; color: var(--text); }
+    .subject-pct { color: blueviolet; font-weight: 600; font-size: 12px; }
+    .progress-bar { height: 7px; background: var(--purple-dim); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; animation: fillBar 1s ease forwards; transform-origin: left; }
+    @keyframes fillBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+    /* ── Bottom Row ────────────────────── */
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+    /* ── Table ─────────────────────────── */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); padding: 0 0 13px; border-bottom: 1.5px solid var(--border); }
+    td { padding: 13px 0; font-size: 13px; border-bottom: 1px solid var(--purple-dim); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .type-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .type-badge.pdf { background: #fee2e2; color: #ef4444; }
+    .type-badge.video { background: var(--purple-dim); color: blueviolet; }
+
+    .status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .status-pill.approved { background: #d1fae5; color: var(--success); }
+    .status-pill.approved::before { background: var(--success); }
+    .status-pill.pending { background: #fef3c7; color: #d97706; }
+    .status-pill.pending::before { background: #f59e0b; }
+    .status-pill.flagged { background: #fee2e2; color: var(--danger); }
+    .status-pill.flagged::before { background: var(--danger); }
+
+    /* ── Users ─────────────────────────── */
+    .user-list { display: flex; flex-direction: column; gap: 11px; }
+
+    .user-item {
+      display: flex; align-items: center; gap: 13px;
+      padding: 12px 15px; background: var(--bg);
+      border: 1.5px solid var(--border); border-radius: 14px;
+      transition: 0.18s; cursor: pointer;
+    }
+
+    .user-item:hover { border-color: blueviolet; background: var(--purple-dim); transform: translateX(3px); }
+
+    .user-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; flex-shrink: 0; }
+    .user-info { flex: 1; }
+    .user-info .uname { font-size: 13px; font-weight: 600; color: var(--text); }
+    .user-info .uemail { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .user-uploads { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: blueviolet; text-align: right; }
+    .user-uploads span { display: block; font-family: 'DM Sans', sans-serif; font-size: 10px; color: var(--muted); font-weight: 400; }
+
+    /* ── Animations ────────────────────── */
+    .content > * { animation: fadeUp 0.5s ease both; }
+    .content > *:nth-child(1) { animation-delay: 0.04s; }
+    .content > *:nth-child(2) { animation-delay: 0.10s; }
+    .content > *:nth-child(3) { animation-delay: 0.16s; }
+    .content > *:nth-child(4) { animation-delay: 0.22s; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📚</div>
+    <h2>Campu<span>Share</span></h2>
+  </div>
+
+  <div class="sidebar-section-label">Overview</div>
+  <a class="nav-item active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+  <a class="nav-item"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+  <a class="nav-item"><i class="fa-solid fa-bell"></i> Notifications <span class="nav-badge">5</span></a>
+
+  <div class="sidebar-section-label">Content</div>
+  <a class="nav-item"><i class="fa-solid fa-file-pdf"></i> Resources <span class="nav-badge">12</span></a>
+  <a class="nav-item"><i class="fa-solid fa-video"></i> Videos</a>
+  <a class="nav-item"><i class="fa-solid fa-flag"></i> Flagged <span class="nav-badge">3</span></a>
+  <a class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+
+  <div class="sidebar-section-label">Management</div>
+  <a class="nav-item"><i class="fa-solid fa-users"></i> Users</a>
+  <a class="nav-item"><i class="fa-solid fa-shield-halved"></i> Moderation</a>
+  <a class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
+
+  <div class="sidebar-footer">
+    <div class="admin-avatar">A</div>
+    <div class="admin-info">
+      <div class="name">Admin User</div>
+      <div class="role">Super Admin</div>
+    </div>
+    <i class="fa-solid fa-ellipsis" style="color:var(--muted);cursor:pointer;"></i>
+  </div>
+</aside>
+
+<!-- ── Main ────────────────────────────────── -->
+<div class="main">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1>Dashboard</h1>
+      <p>Wednesday, 11 March 2026 &nbsp;·&nbsp; Welcome back, Admin 👋</p>
+    </div>
+    <div class="topbar-right">
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search resources, users...">
+      </div>
+      <div class="icon-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-user"></i></div>
+      <button class="upload-topbtn"><i class="fa-solid fa-upload"></i> Upload</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="action-btn primary">
+        <div class="aicon"><i class="fa-solid fa-upload"></i></div>
+        Upload Resource
+      </button>
+      <button class="action-btn">
+        <div class="aicon"><i class="fa-solid fa-user-plus"></i></div>
+        Add User
+      </button>
+      <button class="action-btn">
+        <div class="aicon"><i class="fa-solid fa-flag"></i></div>
+        Review Flagged
+      </button>
+      <button class="action-btn">
+        <div class="aicon"><i class="fa-solid fa-download"></i></div>
+        Export Report
+      </button>
+      <button class="action-btn">
+        <div class="aicon"><i class="fa-solid fa-tags"></i></div>
+        Manage Tags
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card v">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-value">52,840</div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-change up"><i class="fa-solid fa-arrow-trend-up"></i> +8.4% this month</div>
+      </div>
+      <div class="stat-card g">
+        <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
+        <div class="stat-value">3,217</div>
+        <div class="stat-label">Total Resources</div>
+        <div class="stat-change up"><i class="fa-solid fa-arrow-trend-up"></i> +124 this week</div>
+      </div>
+      <div class="stat-card b">
+        <div class="stat-icon"><i class="fa-solid fa-eye"></i></div>
+        <div class="stat-value">189K</div>
+        <div class="stat-label">Monthly Views</div>
+        <div class="stat-change up"><i class="fa-solid fa-arrow-trend-up"></i> +12.1% vs last</div>
+      </div>
+      <div class="stat-card a">
+        <div class="stat-icon"><i class="fa-solid fa-flag"></i></div>
+        <div class="stat-value">3</div>
+        <div class="stat-label">Flagged Content</div>
+        <div class="stat-change warn"><i class="fa-solid fa-triangle-exclamation"></i> Needs review</div>
+      </div>
+    </div>
+
+    <!-- Mid Row -->
+    <div class="mid-row">
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Upload Activity</h3>
+            <div class="sub">PDFs vs Videos uploaded per month</div>
+          </div>
+          <div class="pill-tabs">
+            <button class="pill-tab">Week</button>
+            <button class="pill-tab active">Month</button>
+          </div>
+        </div>
+        <div class="chart-area">
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:60%;animation-delay:.00s"></div><div class="bar vid" style="height:38%;animation-delay:.05s"></div></div><div class="bar-label">Jan</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:72%;animation-delay:.05s"></div><div class="bar vid" style="height:50%;animation-delay:.10s"></div></div><div class="bar-label">Feb</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:48%;animation-delay:.10s"></div><div class="bar vid" style="height:66%;animation-delay:.15s"></div></div><div class="bar-label">Mar</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:84%;animation-delay:.15s"></div><div class="bar vid" style="height:58%;animation-delay:.20s"></div></div><div class="bar-label">Apr</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:62%;animation-delay:.20s"></div><div class="bar vid" style="height:44%;animation-delay:.25s"></div></div><div class="bar-label">May</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:90%;animation-delay:.25s"></div><div class="bar vid" style="height:72%;animation-delay:.30s"></div></div><div class="bar-label">Jun</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:54%;animation-delay:.30s"></div><div class="bar vid" style="height:80%;animation-delay:.35s"></div></div><div class="bar-label">Jul</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:68%;animation-delay:.35s"></div><div class="bar vid" style="height:88%;animation-delay:.40s"></div></div><div class="bar-label">Aug</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:78%;animation-delay:.40s"></div><div class="bar vid" style="height:62%;animation-delay:.45s"></div></div><div class="bar-label">Sep</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:94%;animation-delay:.45s"></div><div class="bar vid" style="height:82%;animation-delay:.50s"></div></div><div class="bar-label">Oct</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:74%;animation-delay:.50s"></div><div class="bar vid" style="height:56%;animation-delay:.55s"></div></div><div class="bar-label">Nov</div></div>
+          <div class="bar-group"><div class="bar-wrap"><div class="bar pdf" style="height:100%;animation-delay:.55s"></div><div class="bar vid" style="height:76%;animation-delay:.60s"></div></div><div class="bar-label">Dec</div></div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:blueviolet"></div> PDF Resources</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> Video Lectures</div>
+        </div>
+      </div>
+
+      <!-- Top Subjects -->
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Top Subjects</h3><div class="sub">By resource count</div></div>
+        </div>
+        <div class="subject-list">
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Computer Science</span><span class="subject-pct">28%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:28%;background:blueviolet"></div></div>
+          </div>
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Mathematics</span><span class="subject-pct">22%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:22%;background:#7c3aed"></div></div>
+          </div>
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Physics</span><span class="subject-pct">18%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:18%;background:#a855f7"></div></div>
+          </div>
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Web Development</span><span class="subject-pct">14%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:14%;background:#c084fc"></div></div>
+          </div>
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Biology</span><span class="subject-pct">10%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:10%;background:#d8b4fe"></div></div>
+          </div>
+          <div class="subject-item">
+            <div class="subject-top"><span class="subject-name">Chemistry</span><span class="subject-pct">8%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:8%;background:#ede9fe;border:1px solid #c084fc"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="bottom-row">
+
+      <!-- Recent Uploads -->
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Recent Uploads</h3><div class="sub">Latest resources pending review</div></div>
+          <button class="pill-tab">View All</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Resource</th><th>Type</th><th>Subject</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:600">Quantum Physics Series</div><div style="font-size:11px;color:var(--muted)">Dr. Alan Grant</div></td>
+              <td><span class="type-badge video"><i class="fa-solid fa-play"></i> Video</span></td>
+              <td style="color:var(--muted);font-size:12px">Physics</td>
+              <td><span class="status-pill approved">Approved</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">Calculus: Limits & Derivatives</div><div style="font-size:11px;color:var(--muted)">Prof. Sarah Lee</div></td>
+              <td><span class="type-badge pdf"><i class="fa-solid fa-file-pdf"></i> PDF</span></td>
+              <td style="color:var(--muted);font-size:12px">Mathematics</td>
+              <td><span class="status-pill approved">Approved</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">Python for Data Science</div><div style="font-size:11px;color:var(--muted)">CodeWithMe</div></td>
+              <td><span class="type-badge video"><i class="fa-solid fa-play"></i> Video</span></td>
+              <td style="color:var(--muted);font-size:12px">Comp. Science</td>
+              <td><span class="status-pill pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">HTML & CSS Complete Guide</div><div style="font-size:11px;color:var(--muted)">FrontendPro</div></td>
+              <td><span class="type-badge pdf"><i class="fa-solid fa-file-pdf"></i> PDF</span></td>
+              <td style="color:var(--muted);font-size:12px">Web Dev</td>
+              <td><span class="status-pill pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:600">Organic Chemistry Fundamentals</div><div style="font-size:11px;color:var(--muted)">Dr. Meera Shah</div></td>
+              <td><span class="type-badge video"><i class="fa-solid fa-play"></i> Video</span></td>
+              <td style="color:var(--muted);font-size:12px">Chemistry</td>
+              <td><span class="status-pill flagged">Flagged</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Top Contributors -->
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Top Contributors</h3><div class="sub">Most active uploaders this month</div></div>
+          <button class="pill-tab">View All</button>
+        </div>
+        <div class="user-list">
+          <div class="user-item">
+            <div class="user-av" style="background:linear-gradient(135deg,blueviolet,#c084fc)">A</div>
+            <div class="user-info"><div class="uname">Dr. Alan Grant</div><div class="uemail">alan.grant@edu.com</div></div>
+            <div class="user-uploads">24<span>uploads</span></div>
+          </div>
+          <div class="user-item">
+            <div class="user-av" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">S</div>
+            <div class="user-info"><div class="uname">Prof. Sarah Lee</div><div class="uemail">sarah.lee@math.edu</div></div>
+            <div class="user-uploads">19<span>uploads</span></div>
+          </div>
+          <div class="user-item">
+            <div class="user-av" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6)">C</div>
+            <div class="user-info"><div class="uname">CodeWithMe</div><div class="uemail">admin@codewithme.io</div></div>
+            <div class="user-uploads">17<span>uploads</span></div>
+          </div>
+          <div class="user-item">
+            <div class="user-av" style="background:linear-gradient(135deg,#9333ea,#c084fc)">M</div>
+            <div class="user-info"><div class="uname">Dr. Meera Shah</div><div class="uemail">m.shah@chem.ac</div></div>
+            <div class="user-uploads">13<span>uploads</span></div>
+          </div>
+          <div class="user-item">
+            <div class="user-av" style="background:linear-gradient(135deg,#a855f7,#d8b4fe)">F</div>
+            <div class="user-info"><div class="uname">FrontendPro</div><div class="uemail">frontpro@devs.net</div></div>
+            <div class="user-uploads">11<span>uploads</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.pill-tabs').forEach(group => {
+    group.querySelectorAll('.pill-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.pill-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+</script>
+</body>
+</html>

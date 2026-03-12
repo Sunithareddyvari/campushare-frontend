@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community — CampuShare</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+  <style>
+    body { background: #f4f6f9; }
+    .navbar { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
+
+    /* ── Page wrapper ── */
+    .community-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      margin-bottom: 36px;
+    }
+    .breadcrumb { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+    .breadcrumb a { color: #aaa; text-decoration: none; }
+    .breadcrumb a:hover { color: blueviolet; }
+    .page-title { font-size: 32px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+    .page-sub { font-size: 15px; color: #888; }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      background: #efefef;
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 32px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 600;
+      color: #777;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn.active {
+      background: white;
+      color: blueviolet;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .tab-btn:hover:not(.active) { color: #444; }
+
+    /* ── Section panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ══════════════════════════════
+       STUDY GROUPS
+    ══════════════════════════════ */
+    .groups-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .groups-toolbar input {
+      padding: 10px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 25px;
+      font-size: 14px;
+      outline: none;
+      width: 280px;
+      transition: border 0.2s;
+    }
+    .groups-toolbar input:focus { border-color: blueviolet; }
+    .btn-create {
+      background: blueviolet;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn-create:hover { background: #4838c2; }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .group-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transition: transform 0.2s;
+    }
+    .group-card:hover { transform: translateY(-4px); }
+    .group-card-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .group-avatar {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .group-name { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .group-subject {
+      font-size: 12px;
+      background: #ede9fe;
+      color: blueviolet;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 3px;
+    }
+    .group-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+    .group-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #888;
+    }
+    .group-members { display: flex; align-items: center; gap: 5px; }
+    .btn-join {
+      padding: 8px 20px;
+      border-radius: 10px;
+      border: 2px solid blueviolet;
+      background: white;
+      color: blueviolet;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-join:hover, .btn-join.joined {
+      background: blueviolet;
+      color: white;
+    }
+
+    /* ══════════════════════════════
+       DISCUSSION FORUMS
+    ══════════════════════════════ */
+    .forum-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .forum-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .forum-filter-btn {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      background: #e5e5e5;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .forum-filter-btn.active {
+      background: blueviolet;
+      color: white;
+      border-color: blueviolet;
+    }
+
+    .forum-list { display: flex; flex-direction: column; gap: 14px; }
+    .forum-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .forum-card:hover { box-shadow: 0 4px 18px rgba(91,75,219,0.13); }
+    .forum-vote {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 36px;
+    }
+    .vote-btn {
+      background: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      width: 32px; height: 28px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.2s;
+    }
+    .vote-btn:hover { border-color: blueviolet; color: blueviolet; }
+    .vote-count { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .forum-body { flex: 1; min-width: 0; }
+    .forum-tags { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .forum-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .forum-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .forum-preview { font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .forum-footer {
+      display: flex;
+      gap: 18px;
+      font-size: 12px;
+      color: #aaa;
+      align-items: center;
+    }
+    .forum-footer span { display: flex; align-items: center; gap: 5px; }
+    .forum-author { margin-left: auto; font-size: 12px; color: #888; }
+
+    /* ══════════════════════════════
+       ASK A DOUBT
+    ══════════════════════════════ */
+    .doubt-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      align-items: start;
+    }
+    .doubt-form-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .doubt-form-card h3 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 22px; }
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 7px; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      color: #333;
+      background: #fafafa;
+      outline: none;
+      transition: border 0.2s;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: blueviolet;
+      background: white;
+    }
+    .field textarea { resize: vertical; min-height: 120px; }
+    .field input::placeholder, .field textarea::placeholder { color: #bbb; }
+    .char-count { font-size: 11px; color: #aaa; text-align: right; margin-top: 4px; }
+    .tag-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fafafa;
+      min-height: 46px;
+      cursor: text;
+    }
+    .tag-chip {
+      background: #ede9fe;
+      color: blueviolet;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tag-chip button {
+      background: none;
+      border: none;
+      color: blueviolet;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+      line-height: 1;
+    }
+    .tag-input-wrap input {
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 13px;
+      padding: 2px 4px;
+      min-width: 80px;
+      flex: 1;
+    }
+    .btn-submit-doubt {
+      width: 100%;
+      padding: 14px;
+      background: blueviolet;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s;
+      margin-top: 6px;
+    }
+    .btn-submit-doubt:hover { background: #4838c2; }
+
+    /* Tips card */
+    .tips-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .tips-card h4 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
+    .tip-item {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .tip-item i { color: blueviolet; margin-top: 2px; flex-shrink: 0; }
+
+    /* Recent doubts */
+    .recent-doubts { margin-top: 20px; }
+    .recent-doubts h4 { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
+    .doubt-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .doubt-item:hover { box-shadow: 0 4px 14px rgba(91,75,219,0.12); }
+    .doubt-item-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+    .doubt-item-meta { display: flex; gap: 14px; font-size: 12px; color: #aaa; align-items: center; }
+    .doubt-status {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .status-answered { background: #dcfce7; color: #16a34a; }
+    .status-open { background: #fef3c7; color: #d97706; }
+
+    /* Create Group Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 20px;
+      padding: 36px 32px; width: 90%; max-width: 460px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      animation: pop 0.25s ease;
+    }
+    @keyframes pop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .modal-header h3 { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+    .modal-close { background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; }
+    .modal-close:hover { color: #333; }
+    .btn-modal-submit {
+      width: 100%; padding: 13px;
+      background: blueviolet; color: white;
+      border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: background 0.2s; margin-top: 6px;
+    }
+    .btn-modal-submit:hover { background: #4838c2; }
+
+    @media (max-width: 768px) {
+      .doubt-layout { grid-template-columns: 1fr; }
+      .groups-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container">
+      <img src="logo.png" alt="logo" class="logo">
+      <h1 class="wesite_name">CampuShare</h1>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Browse</a>
+      <a href="categories.html">Categories</a>
+      <a href="community.html">Community</a>
+      <a href="upload.html">Upload</a>
+      <a href="signin.html">SignIn</a>
+    </nav>
+  </header>
+
+  <div class="community-page">
+
+    <div class="page-header">
+      <div class="breadcrumb"><a href="index.html">Home</a> / Community</div>
+      <h1 class="page-title">Community</h1>
+      <p class="page-sub" style="color:#888;">Connect with fellow students — study together, discuss topics, and get your doubts solved.</p>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('groups')">
+        <i class="fa-solid fa-people-group"></i> Study Groups
+      </button>
+      <button class="tab-btn" onclick="switchTab('forums')">
+        <i class="fa-solid fa-comments"></i> Discussion Forums
+      </button>
+      <button class="tab-btn" onclick="switchTab('doubts')">
+        <i class="fa-solid fa-circle-question"></i> Ask a Doubt
+      </button>
+    </div>
+
+    <!-- ══ STUDY GROUPS ══ -->
+    <div class="tab-panel active" id="panel-groups">
+      <div class="groups-toolbar">
+        <input type="search" placeholder="Search study groups...">
+        <button class="btn-create" onclick="document.getElementById('createModal').classList.add('show')">
+          <i class="fa-solid fa-plus"></i> Create Group
+        </button>
+      </div>
+      <div class="groups-grid">
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#ede9fe;">💻</div>
+            <div>
+              <div class="group-name">DSA Crackdown</div>
+              <span class="group-subject">Computer Science</span>
+            </div>
+          </div>
+          <p class="group-desc">Daily DSA problems, mock interviews, and weekly contests. All levels welcome!</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 128 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#dcfce7;">📐</div>
+            <div>
+              <div class="group-name">Calculus Masters</div>
+              <span class="group-subject">Mathematics</span>
+            </div>
+          </div>
+          <p class="group-desc">Solving limits, integrals, and differential equations together. Exam prep focused.</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 84 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#fef3c7;">⚛️</div>
+            <div>
+              <div class="group-name">Quantum Physics Hub</div>
+              <span class="group-subject">Physics</span>
+            </div>
+          </div>
+          <p class="group-desc">Discuss wave-particle duality, Schrödinger's equation and more with peers.</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 61 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#fee2e2;">🧬</div>
+            <div>
+              <div class="group-name">Bio Nerds</div>
+              <span class="group-subject">Biology</span>
+            </div>
+          </div>
+          <p class="group-desc">Anatomy, genetics, and NEET prep. Share diagrams, mnemonics, and notes.</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 97 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#dbeafe;">🌐</div>
+            <div>
+              <div class="group-name">Web Dev Circle</div>
+              <span class="group-subject">Web Development</span>
+            </div>
+          </div>
+          <p class="group-desc">HTML, CSS, JS, React and beyond. Build projects together and get code reviews.</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 153 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+        <div class="group-card">
+          <div class="group-card-top">
+            <div class="group-avatar" style="background:#f3e8ff;">🤖</div>
+            <div>
+              <div class="group-name">AI/ML Enthusiasts</div>
+              <span class="group-subject">Artificial Intelligence</span>
+            </div>
+          </div>
+          <p class="group-desc">Papers, projects, and discussions on machine learning, deep learning and AI tools.</p>
+          <div class="group-meta">
+            <div class="group-members"><i class="fa-solid fa-user-group"></i> 210 members</div>
+            <button class="btn-join" onclick="toggleJoin(this)">Join</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ DISCUSSION FORUMS ══ -->
+    <div class="tab-panel" id="panel-forums">
+      <div class="forum-toolbar">
+        <div class="forum-filters">
+          <button class="forum-filter-btn active" onclick="setForumFilter(this)">All</button>
+          <button class="forum-filter-btn" onclick="setForumFilter(this)">Physics</button>
+          <button class="forum-filter-btn" onclick="setForumFilter(this)">Mathematics</button>
+          <button class="forum-filter-btn" onclick="setForumFilter(this)">Computer Science</button>
+          <button class="forum-filter-btn" onclick="setForumFilter(this)">Chemistry</button>
+        </div>
+        <button class="btn-create"><i class="fa-solid fa-plus"></i> New Post</button>
+      </div>
+      <div class="forum-list">
+
+        <div class="forum-card">
+          <div class="forum-vote">
+            <button class="vote-btn" onclick="vote(this, 1)">▲</button>
+            <span class="vote-count">24</span>
+            <button class="vote-btn" onclick="vote(this, -1)">▼</button>
+          </div>
+          <div class="forum-body">
+            <div class="forum-tags">
+              <span class="forum-tag" style="background:#ede9fe;color:blueviolet;">Computer Science</span>
+              <span class="forum-tag" style="background:#dcfce7;color:#16a34a;">Solved</span>
+            </div>
+            <div class="forum-title">What's the difference between BFS and DFS in terms of memory usage?</div>
+            <div class="forum-preview">BFS uses a queue and stores all nodes at a level, while DFS uses a stack and goes deep first. But when it comes to actual memory...</div>
+            <div class="forum-footer">
+              <span><i class="fa-solid fa-comment"></i> 12 replies</span>
+              <span><i class="fa-regular fa-eye"></i> 340 views</span>
+              <span><i class="fa-regular fa-clock"></i> 2 hours ago</span>
+              <span class="forum-author">by Rahul K.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="forum-card">
+          <div class="forum-vote">
+            <button class="vote-btn" onclick="vote(this, 1)">▲</button>
+            <span class="vote-count">17</span>
+            <button class="vote-btn" onclick="vote(this, -1)">▼</button>
+          </div>
+          <div class="forum-body">
+            <div class="forum-tags">
+              <span class="forum-tag" style="background:#fef3c7;color:#d97706;">Mathematics</span>
+              <span class="forum-tag" style="background:#fee2e2;color:#ef4444;">Open</span>
+            </div>
+            <div class="forum-title">How to approach integration by parts for complex expressions?</div>
+            <div class="forum-preview">I keep getting confused about when to use integration by parts vs substitution. Is there a rule of thumb for picking u and dv?</div>
+            <div class="forum-footer">
+              <span><i class="fa-solid fa-comment"></i> 8 replies</span>
+              <span><i class="fa-regular fa-eye"></i> 210 views</span>
+              <span><i class="fa-regular fa-clock"></i> 5 hours ago</span>
+              <span class="forum-author">by Sneha M.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="forum-card">
+          <div class="forum-vote">
+            <button class="vote-btn" onclick="vote(this, 1)">▲</button>
+            <span class="vote-count">31</span>
+            <button class="vote-btn" onclick="vote(this, -1)">▼</button>
+          </div>
+          <div class="forum-body">
+            <div class="forum-tags">
+              <span class="forum-tag" style="background:#dbeafe;color:#3b82f6;">Physics</span>
+              <span class="forum-tag" style="background:#dcfce7;color:#16a34a;">Solved</span>
+            </div>
+            <div class="forum-title">Why does the double-slit experiment collapse when observed?</div>
+            <div class="forum-preview">I understand the experiment shows wave-particle duality, but I can't intuitively grasp why simply observing changes the outcome...</div>
+            <div class="forum-footer">
+              <span><i class="fa-solid fa-comment"></i> 20 replies</span>
+              <span><i class="fa-regular fa-eye"></i> 870 views</span>
+              <span><i class="fa-regular fa-clock"></i> Yesterday</span>
+              <span class="forum-author">by Dr. Alan G.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="forum-card">
+          <div class="forum-vote">
+            <button class="vote-btn" onclick="vote(this, 1)">▲</button>
+            <span class="vote-count">9</span>
+            <button class="vote-btn" onclick="vote(this, -1)">▼</button>
+          </div>
+          <div class="forum-body">
+            <div class="forum-tags">
+              <span class="forum-tag" style="background:#f3e8ff;color:#7c3aed;">Chemistry</span>
+              <span class="forum-tag" style="background:#fee2e2;color:#ef4444;">Open</span>
+            </div>
+            <div class="forum-title">Best way to remember organic chemistry reaction mechanisms?</div>
+            <div class="forum-preview">There are so many mechanisms — SN1, SN2, E1, E2... any tips on memorizing when each one applies and what the products are?</div>
+            <div class="forum-footer">
+              <span><i class="fa-solid fa-comment"></i> 5 replies</span>
+              <span><i class="fa-regular fa-eye"></i> 155 views</span>
+              <span><i class="fa-regular fa-clock"></i> 2 days ago</span>
+              <span class="forum-author">by Priya S.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ ASK A DOUBT ══ -->
+    <div class="tab-panel" id="panel-doubts">
+      <div class="doubt-layout">
+
+        <!-- Form -->
+        <div>
+          <div class="doubt-form-card">
+            <h3>🙋 Post Your Doubt</h3>
+            <div class="field">
+              <label>Your Question <span style="color:#ef4444;">*</span></label>
+              <input type="text" id="doubtTitle" placeholder="e.g. What is the time complexity of quicksort?" oninput="updateChar()">
+            </div>
+            <div class="field">
+              <label>Describe your doubt in detail <span style="color:#ef4444;">*</span></label>
+              <textarea id="doubtDesc" placeholder="Explain what you tried, what's confusing you, and any relevant context..." oninput="updateDescChar()"></textarea>
+              <div class="char-count"><span id="descCount">0</span> / 500</div>
+            </div>
+            <div class="field">
+              <label>Subject <span style="color:#ef4444;">*</span></label>
+              <select>
+                <option value="">Select subject</option>
+                <option>Physics</option>
+                <option>Mathematics</option>
+                <option>Computer Science</option>
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Web Development</option>
+                <option>Artificial Intelligence</option>
+                <option>Electronics and Communication</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tags <span style="font-size:11px;color:#aaa;font-weight:400;">(press Enter to add)</span></label>
+              <div class="tag-input-wrap" id="tagWrap" onclick="document.getElementById('tagField').focus()">
+                <input type="text" id="tagField" placeholder="e.g. recursion, arrays..." onkeydown="addTag(event)">
+              </div>
+            </div>
+            <button class="btn-submit-doubt" onclick="submitDoubt()">
+              <i class="fa-solid fa-paper-plane"></i> Post Doubt
+            </button>
+          </div>
+
+          <!-- Recent Doubts -->
+          <div class="recent-doubts">
+            <h4>🕐 Recently Asked</h4>
+
+            <div class="doubt-item">
+              <div class="doubt-item-title">How does dynamic programming differ from recursion with memoization?</div>
+              <div class="doubt-item-meta">
+                <span><i class="fa-solid fa-user"></i> Kiran N.</span>
+                <span><i class="fa-regular fa-clock"></i> 1 hr ago</span>
+                <span><i class="fa-solid fa-comment"></i> 4 answers</span>
+                <span class="doubt-status status-answered">Answered</span>
+              </div>
+            </div>
+
+            <div class="doubt-item">
+              <div class="doubt-item-title">Why is normalization important in database design?</div>
+              <div class="doubt-item-meta">
+                <span><i class="fa-solid fa-user"></i> Ananya P.</span>
+                <span><i class="fa-regular fa-clock"></i> 3 hrs ago</span>
+                <span><i class="fa-solid fa-comment"></i> 2 answers</span>
+                <span class="doubt-status status-answered">Answered</span>
+              </div>
+            </div>
+
+            <div class="doubt-item">
+              <div class="doubt-item-title">Can someone explain Faraday's law of electromagnetic induction?</div>
+              <div class="doubt-item-meta">
+                <span><i class="fa-solid fa-user"></i> Meera T.</span>
+                <span><i class="fa-regular fa-clock"></i> 6 hrs ago</span>
+                <span><i class="fa-solid fa-comment"></i> 0 answers</span>
+                <span class="doubt-status status-open">Open</span>
+              </div>
+            </div>
+
+            <div class="doubt-item">
+              <div class="doubt-item-title">What are the steps to balance a redox reaction?</div>
+              <div class="doubt-item-meta">
+                <span><i class="fa-solid fa-user"></i> Ravi K.</span>
+                <span><i class="fa-regular fa-clock"></i> Yesterday</span>
+                <span><i class="fa-solid fa-comment"></i> 6 answers</span>
+                <span class="doubt-status status-answered">Answered</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="tips-card">
+          <h4>💡 Tips for a Great Question</h4>
+          <div class="tip-item"><i class="fa-solid fa-check-circle"></i> Be specific — mention which topic or concept you're stuck on</div>
+          <div class="tip-item"><i class="fa-solid fa-check-circle"></i> Share what you've already tried before asking</div>
+          <div class="tip-item"><i class="fa-solid fa-check-circle"></i> Use clear language and avoid vague questions</div>
+          <div class="tip-item"><i class="fa-solid fa-check-circle"></i> Add relevant tags so the right people find your doubt</div>
+          <div class="tip-item"><i class="fa-solid fa-check-circle"></i> Mark your doubt as solved once you get the answer</div>
+
+          <div style="background:#ede9fe;border-radius:12px;padding:16px;margin-top:20px;">
+            <h5 style="color:blueviolet;font-size:13px;font-weight:700;margin-bottom:6px;">🏆 Earn Points!</h5>
+            <p style="color:blueviolet;opacity:0.85;font-size:12px;line-height:1.7;margin:0;">Answer others' doubts and earn <strong>10 pts</strong> per accepted answer. Ask well-formed questions and get <strong>5 pts</strong> per upvote!</p>
+          </div>
+
+          <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-top:14px;">
+            <h5 style="font-size:13px;font-weight:700;margin-bottom:8px;color:#1a1a2e;">📊 Community Stats</h5>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#555;">
+              <div style="text-align:center;"><strong style="display:block;font-size:18px;color:blueviolet;">1.2K</strong>Doubts solved</div>
+              <div style="text-align:center;"><strong style="display:block;font-size:18px;color:blueviolet;">340</strong>Active helpers</div>
+              <div style="text-align:center;"><strong style="display:block;font-size:18px;color:blueviolet;">~1hr</strong>Avg response</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Create Group Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create a Study Group</h3>
+        <button class="modal-close" onclick="document.getElementById('createModal').classList.remove('show')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="field"><label>Group Name <span style="color:#ef4444;">*</span></label><input type="text" placeholder="e.g. GATE 2026 Prep"></div>
+      <div class="field"><label>Subject <span style="color:#ef4444;">*</span></label>
+        <select>
+          <option value="">Select subject</option>
+          <option>Computer Science</option><option>Mathematics</option>
+          <option>Physics</option><option>Chemistry</option>
+          <option>Biology</option><option>Web Development</option>
+          <option>Artificial Intelligence</option>
+        </select>
+      </div>
+      <div class="field"><label>Description</label><textarea placeholder="What is this group about?"></textarea></div>
+      <button class="btn-modal-submit" onclick="document.getElementById('createModal').classList.remove('show')">
+        <i class="fa-solid fa-people-group"></i> Create Group
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>CampuShare</h3>
+        <p>Empowering students worldwide with accessible, high-quality academic resources.</p>
+        <div class="social-icons">
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-github"></i></a>
+          <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#">PDF Notes</a></li>
+          <li><a href="#">Video Lectures</a></li>
+          <li><a href="#">Study Guides</a></li>
+          <li><a href="#">Practice Exams</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Stay Updated</h3>
+        <p>Subscribe to our newsletter for the latest study tips.</p>
+        <div class="newsletter">
+          <input type="email" placeholder="Enter your email">
+          <button><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 CampuShare Inc. All rights reserved.</div>
+      <div>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Settings</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(
+          tab === 'groups' ? 'study' : tab === 'forums' ? 'discussion' : 'doubt'
+        ));
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    // Forum filter
+    function setForumFilter(btn) {
+      document.querySelectorAll('.forum-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // Vote
+    function vote(btn, dir) {
+      const countEl = btn.parentElement.querySelector('.vote-count');
+      countEl.textContent = parseInt(countEl.textContent) + dir;
+    }
+
+    // Join toggle
+    function toggleJoin(btn) {
+      btn.classList.toggle('joined');
+      btn.textContent = btn.classList.contains('joined') ? 'Joined ✓' : 'Join';
+    }
+
+    // Tag input
+    function addTag(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (!val) return;
+        const chip = document.createElement('div');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `${val} <button onclick="this.parentElement.remove()">×</button>`;
+        document.getElementById('tagWrap').insertBefore(chip, e.target);
+        e.target.value = '';
+      }
+    }
+
+    // Char counter
+    function updateDescChar() {
+      document.getElementById('descCount').textContent =
+        document.getElementById('doubtDesc').value.length;
+    }
+
+    // Submit doubt
+    function submitDoubt() {
+      const title = document.getElementById('doubtTitle').value.trim();
+      if (!title) { alert('Please enter your question!'); return; }
+      alert('Your doubt has been posted! 🎉 Students will answer soon.');
+      document.getElementById('doubtTitle').value = '';
+      document.getElementById('doubtDesc').value = '';
+      document.getElementById('descCount').textContent = '0';
+    }
+  </script>
+</body>
+</html>
